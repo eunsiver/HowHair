@@ -3,6 +3,7 @@ package review.hairshop.review_image;
 
 import lombok.*;
 import review.hairshop.common.BasicEntity;
+import review.hairshop.common.enums.Status;
 import review.hairshop.review.Review;
 
 import javax.persistence.*;
@@ -20,6 +21,9 @@ public class ReviewImage extends BasicEntity{
     private Long id;
 
     private String url;
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     @JoinColumn
     @ManyToOne(fetch = FetchType.LAZY)

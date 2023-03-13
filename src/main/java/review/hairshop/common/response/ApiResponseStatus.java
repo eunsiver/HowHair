@@ -51,6 +51,13 @@ public enum ApiResponseStatus {
     INVALID_ENUM(false, 2003, "정의되지 않은 enum 값이 넘어왔습니다."),
     MAX_FILE_SIZE_EXCEEDED(false, 2004, "업로드 가능한 각 이미지 최대 사이즈는 15MB로 제한됩니다."),
     MAX_REQUEST_SIZE_EXCEEDED(false, 2005, "업로드 가능한 총 이미지 최대 사이즈는 100MB로 제한됩니다."),
+    NO_LOGIN(false, 2006, "로그인된 사용자가 아닙니다."),
+    INCORRECT_HTTP_METHOD(false,2005, "잘못 매칭된 HTTP 메소드로 요청이 들어왔습니다."),
+    INVALUD_ACCESS_TOKEN(false,2101, "유효하지 않은 Access Token 입니다."),
+    FAIL_SIGN_UP(false, 2141, "이미 존재하는 username 입니다."),
+    FAIL_LOGIN(false, 2121, "아이디 또는 패스워드가 잘못되었습니다."),
+    INVALID_MEMBER(false, 2122, "로그인된 회원이 아닙니다."),
+
 
 
     /**

@@ -6,6 +6,7 @@ import review.hairshop.common.BasicEntity;
 import review.hairshop.common.enums.CurlyStatus;
 import review.hairshop.common.enums.Gender;
 import review.hairshop.common.enums.LengthStatus;
+import review.hairshop.common.enums.Status;
 import review.hairshop.review.Review;
 
 import javax.persistence.*;
@@ -25,6 +26,8 @@ public class Member extends BasicEntity {
     @Column(name = "member_id")
     private Long id;
 
+    private Long kakaoId;
+
     private String name;
 
     @Enumerated(EnumType.STRING)
@@ -36,12 +39,35 @@ public class Member extends BasicEntity {
     @Enumerated(EnumType.STRING)
     private LengthStatus lengthStatus;
 
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
     @OneToMany(mappedBy = "member")
     private List<Review> reviewList = new LinkedList<>();
 
     @OneToMany(mappedBy = "member")
     private List<Bookmark> bookmarkList = new LinkedList<>();
 
+    /**
+     * [변경 메서드]
+     * */
+
+    public void changeMemberInfo(Gender gender, LengthStatus lengthStatus, CurlyStatus curlyStatus){
+
+        this.gender = gender;
+        this.lengthStatus = lengthStatus;
+        this.curlyStatus = curlyStatus;
+    }
+
+    public void changeMemberInfo(LengthStatus lengthStatus, CurlyStatus curlyStatus){
+
+        this.lengthStatus = lengthStatus;
+        this.curlyStatus = curlyStatus;
+    }
+
+    public void changeStatus(Status status){
+        this.status = status;
+    }
 
 
 }

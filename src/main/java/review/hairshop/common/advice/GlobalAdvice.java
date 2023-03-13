@@ -6,11 +6,14 @@ import org.apache.tomcat.util.http.fileupload.impl.SizeLimitExceededException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import review.hairshop.common.response.ApiException;
 import review.hairshop.common.response.ApiResponse;
 import review.hairshop.common.response.ApiResponseStatus;
@@ -22,6 +25,7 @@ import java.net.BindException;
 import java.util.stream.Collectors;
 
 import static review.hairshop.common.response.ApiResponseStatus.INVALID_ENUM;
+import static review.hairshop.common.response.ApiResponseStatus.INVALUD_ACCESS_TOKEN;
 
 @Slf4j
 @RestControllerAdvice
@@ -34,6 +38,14 @@ public class GlobalAdvice {
     public ApiResponse exHandler(ApiException e){
         log.error("EXCEPTION = {}, INTERNAL_MESSAGE = {}", e.getStatus(), e.getInternalMessage());
         return ApiResponse.fail(e.getStatus());
+    }
+
+    /** [OAuth 수행시 , 유효하지 않은 토큰값이 넘어갔을 때 발생하는 예외] */
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiResponse authHandler(WebClientResponseException e){
+        log.error("EXCEPTION = {}, INTERNAL_MESSAGE = {}", e, e.getMessage());
+        return ApiResponse.fail(INVALUD_ACCESS_TOKEN);
     }
 
     /** [필수 헤더값이 없을 때 발생하는 예외 처리에 대한 -> 실패 응답] */
@@ -58,7 +70,7 @@ public class GlobalAdvice {
      *  Controller에서 이에 대한 에러 핸들링을 하지 않는 경우  -> BindException이 터진다 -> 그러면 이 ExceptionHandler까지 예외가 올라오고 , 여기서 일괄적으로 처리한다 */
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiResponse bindExHandler(BindException e, BindingResult bindingResult){
+    public ApiResponse bindExHandler(MethodArgumentNotValidException e, BindingResult bindingResult){
         log.error("EXCEPTION = {}, INTERNAL_MESSAGE = {}", e, e.getMessage());
         ValidationFail validationFail = makeValidationError(bindingResult);
         return ApiResponse.failBeanValidation(validationFail);
@@ -82,6 +94,17 @@ public class GlobalAdvice {
         log.error("EXCEPTION = {} , EXCEPTION_MESSAGE = {}, INTERNAL_MESSAGE = {}", INVALID_ENUM, e.getMessage(),"정의하지 않은, 잘못된 enum 값이 요청으로 들어왔습니다.");
         return ApiResponse.fail(INVALID_ENUM);
     }
+
+    /**
+     * [설정한 HTTP 메소드와 다른 HTTP 메소드로 요청이 들어온 경우]
+     * */
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiResponse inCorrectHttpMethod(HttpRequestMethodNotSupportedException e){
+        log.error("EXCEPTION = {} , INTERNAL_MESSAGE = {}", e, e.getMessage());
+        return ApiResponse.fail(ApiResponseStatus.INCORRECT_HTTP_METHOD);
+    }
+
 
     /** -------------------------------------------------------------------------------*/
 
