@@ -3,6 +3,7 @@ package review.hairshop.hair_type_mapping;
 
 import lombok.*;
 import review.hairshop.common.BasicEntity;
+import review.hairshop.common.enums.Status;
 import review.hairshop.hair_type.HairType;
 import review.hairshop.review.Review;
 
@@ -27,4 +28,7 @@ public class HairTypeMapping extends BasicEntity {
     @JoinColumn
     @ManyToOne(fetch = FetchType.LAZY)
     private HairType hairType;
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
 }

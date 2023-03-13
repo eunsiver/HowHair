@@ -30,7 +30,6 @@ public class BasicEntity {
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
-    private Status status;
 
     /** em.persist() 가 수행되기 전 */
     @PrePersist

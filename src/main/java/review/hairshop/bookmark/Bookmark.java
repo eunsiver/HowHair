@@ -1,6 +1,7 @@
 package review.hairshop.bookmark;
 
 import lombok.*;
+import review.hairshop.common.enums.Status;
 import review.hairshop.member.Member;
 import review.hairshop.review.Review;
 
@@ -26,5 +27,14 @@ public class Bookmark {
     @ManyToOne(fetch = FetchType.LAZY)
     private Review review;
 
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
+    /**
+     * [변경 메서드]
+     * */
+    public void changeStatus(Status status){
+        this.status = status;
+    }
 
 }

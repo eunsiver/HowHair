@@ -6,6 +6,7 @@ import review.hairshop.common.BasicEntity;
 import review.hairshop.common.enums.CurlyStatus;
 import review.hairshop.common.enums.LengthStatus;
 import review.hairshop.common.enums.Satisfaction;
+import review.hairshop.common.enums.Status;
 import review.hairshop.hair_style_mapping.HairStyleMapping;
 import review.hairshop.hair_type_mapping.HairTypeMapping;
 import review.hairshop.member.Member;
@@ -43,6 +44,9 @@ public class Review extends BasicEntity{
     @Enumerated(EnumType.STRING)
     private CurlyStatus curlyStatus;
 
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
     private int price;
 
     private String content;
@@ -65,5 +69,11 @@ public class Review extends BasicEntity{
     @OneToMany(mappedBy = "review")
     private List<HairStyleMapping> hairStyleMappings = new LinkedList<>();
 
+    /**
+     * [변경 메서드]
+     * */
+    public void changeStatus(Status status){
+        this.status = status;
+    }
 
 }

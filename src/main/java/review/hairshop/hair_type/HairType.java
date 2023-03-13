@@ -4,6 +4,7 @@ package review.hairshop.hair_type;
 import lombok.*;
 import review.hairshop.common.BasicEntity;
 import review.hairshop.common.enums.Hair_Type;
+import review.hairshop.common.enums.Status;
 import review.hairshop.hair_type_mapping.HairTypeMapping;
 
 import javax.persistence.*;
@@ -27,4 +28,7 @@ public class HairType extends BasicEntity {
 
     @OneToMany(mappedBy = "hairType")
     private List<HairTypeMapping> hairTypeMappingLong = new LinkedList<>();
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
 }
