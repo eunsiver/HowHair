@@ -30,6 +30,10 @@ public class Bookmark {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    public void addReview(Review review){
+        this.review=review;
+    }
+
     /**
      * [변경 메서드]
      * */

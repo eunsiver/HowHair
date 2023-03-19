@@ -12,15 +12,19 @@ spring:
 
 
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://aws-rds.cyeqzizjffgt.ap-northeast-2.rds.amazonaws.com/hair_review
-    username: admin
-    password: kkt1326!
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://aws-rds.cyeqzizjffgt.ap-northeast-2.rds.amazonaws.com/hair_review
+#    username: admin
+#    password: kkt1326!
+    url: jdbc:h2:tcp://localhost/~/hair
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
 
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     properties:
       hibernate:
         #        show_sql: true
@@ -38,4 +42,14 @@ server:
 
 kakao:
   url: https://kapi.kakao.com/v2/user/me
+
+cloud:
+  aws:
+    s3:
+      bucket: howhair-user-image-bucket
+    stack.auto: false
+    region.static: ap-northeast-2
+    credentials:
+      accessKey: AKIAZROTTVYQWJ4SYIPL
+      secretKey: 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
 

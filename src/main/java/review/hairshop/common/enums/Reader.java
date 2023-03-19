@@ -1,4 +1,5 @@
 package review.hairshop.common.enums;
 
-public enum Hair_Style {
+public enum Reader {
+    ME, OTHER
 }

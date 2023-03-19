@@ -57,7 +57,8 @@ public enum ApiResponseStatus {
     FAIL_SIGN_UP(false, 2141, "이미 존재하는 username 입니다."),
     FAIL_LOGIN(false, 2121, "아이디 또는 패스워드가 잘못되었습니다."),
     INVALID_MEMBER(false, 2122, "로그인된 회원이 아닙니다."),
-
+    WRONG_IMAGE(false,2123 ,"이미지를 업로드 할 수 없습니다." ),
+    INVALID_REVIEW(false,2124,"리뷰를 불러올 수 없습니다."),
 
 
     /**
@@ -68,6 +69,7 @@ public enum ApiResponseStatus {
      * 4000 : Database, Server 오류
      * */
     INTERNAL_SERVER_ERROR(false, 4000, "예상하지 못한 예외가 발생하였습니다.");
+
 
 
 

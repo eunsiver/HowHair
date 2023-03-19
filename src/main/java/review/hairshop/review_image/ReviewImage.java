@@ -28,4 +28,8 @@ public class ReviewImage extends BasicEntity{
     @JoinColumn
     @ManyToOne(fetch = FetchType.LAZY)
     private Review review;
+
+    public void changeStatus(Status status){
+        this.status = status;
+    }
 }
