@@ -36,3 +36,4 @@ feature/{feature_name} : 기능을 개발하는 브랜치
 release_{version} : 이번 출시 버전을 준비하는 브랜치
 hotfix : 출시 버전에서 발생한 버그를 수정 하는 브랜치
 ```
+[우아한 형제들 기술 블로그 github-flow](https://techblog.woowahan.com/2553/)
