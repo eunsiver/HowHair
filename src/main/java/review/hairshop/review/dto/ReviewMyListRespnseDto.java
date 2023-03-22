@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Builder
+@AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@AllArgsConstructor
-public class ReviewImageResDto {
-    List<String> reviewImages;
+public class ReviewMyListRespnseDto {
+    List<ReviewMyListInfoDto> reviewMyListResDtos;
 }

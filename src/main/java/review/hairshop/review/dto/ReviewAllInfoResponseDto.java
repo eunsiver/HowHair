@@ -4,10 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import review.hairshop.common.enums.Gender;
-import review.hairshop.common.enums.LengthStatus;
-import review.hairshop.common.enums.Reader;
-import review.hairshop.common.enums.Satisfaction;
+import review.hairshop.common.enums.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ReviewAllInfoResDto {
+public class ReviewAllInfoResponseDto {
     //이 글을 직접 쓴 사람인지
     private Reader reader;
     //헤어샵 이름
@@ -38,9 +35,11 @@ public class ReviewAllInfoResDto {
     //작성 날짜
     private LocalDateTime createAt;
     //시술 종류
-    private List<String> hairTypes;
-    //헤어 스타일
-    private List<String> hairStyles;
+    private Hair_Cut hairCut;
+
+    private Perm perm;
+
+    private Dyeing dyeing;
     //리뷰에 쓴 머리 기장
     private LengthStatus lengthStatus;
     //시술 가격

@@ -8,6 +8,7 @@ import review.hairshop.common.enums.*;
 
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -15,7 +16,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class ReviewNewReqDto {
+public class
+
+
+ReviewNewReqestDto {
     //미용실 이름
     @NotNull(message = "미용실 이름은 필수 값입니다.")
     private String shopName;
@@ -48,6 +52,7 @@ public class ReviewNewReqDto {
     private Long price;
 
     //사진 리스트로 넘어옴
+    @Size//몇개 제한
     private List<MultipartFile> imageFiles;
 
     // 내용

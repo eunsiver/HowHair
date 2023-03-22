@@ -3,6 +3,7 @@ package review.hairshop.review.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import review.hairshop.common.enums.*;
 import review.hairshop.common.response.ApiException;
 import review.hairshop.common.response.ApiResponseStatus;
@@ -14,13 +15,11 @@ import review.hairshop.review.dto.ReviewMyListInfoDto;
 import review.hairshop.review.dto.ReviewNewParamDto;
 import review.hairshop.review.repository.ReviewRepository;
 import review.hairshop.review_image.ReviewImage;
-import review.hairshop.review_image.service.AwsS3Service;
+import review.hairshop.common.utils.AwsS3ServiceUtil;
 import review.hairshop.review_image.service.ReviewImageService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static review.hairshop.common.enums.Status.*;
 
@@ -31,7 +30,7 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final MemberRepository memberRepository;
-    private final AwsS3Service awsS3Service;
+    private final AwsS3ServiceUtil awsS3ServiceUtil;
     private final ReviewImageService reviewImageService;
 
     private Member getMember(Long memberId){
@@ -55,37 +54,28 @@ public class ReviewService {
 
     //리뷰에다 저장
     @Transactional
-    public Long createReview(Long memberId, ReviewNewParamDto reviewNewParamDto) {
+    public Long registerReview(Long memberId, ReviewNewParamDto reviewNewParamDto) {
         //status 고려
         Member member=getMember(memberId);
 
-        /**
-         * cut, perm, dyeing, straightening이 DTO로 들어올때부터 기본이 NONE으로 받는다고 가정
-         * */
-        Review review = Review.builder()
-                .content(reviewNewParamDto.getContent())
-                .date(reviewNewParamDto.getDate())
-                .status(ACTIVE)// 삭제하면 Status.INACTIVE로 변경
-                .designerName(reviewNewParamDto.getDesignerName())
-                .satisfaction(reviewNewParamDto.getSatisfaction())
-                .hairShopName(reviewNewParamDto.getShopName())
-                .price(reviewNewParamDto.getPrice())
-                .content(reviewNewParamDto.getContent())
-                .hairCut(reviewNewParamDto.getHairCut())
-                .dyeing(reviewNewParamDto.getDyeing())
-                .straightening(reviewNewParamDto.getStraightening())
-                .perm(reviewNewParamDto.getPerm())
-                .lengthStatus(reviewNewParamDto.getLengthStatus())
-                .member(member)
-                .build();
-
+        Review review = createReview(reviewNewParamDto,member);
         reviewRepository.save(review);
 
         /**
-         * 리뷰에서 이미지를 받았다면
+         * 리뷰 이미지가 없다면 디폴트 이미지 넣어주기
+         * Entity들을 먼저 save한 후 파일들을 저장
          * **/
-        if(reviewNewParamDto.getImageFiles()!=null){
-            List<String> imgPaths = awsS3Service.upload(reviewNewParamDto.getImageFiles());
+
+
+        /** 2_2.그렇지 않고 함께 등록할 이미지가 하나 이상 존재하면   <항상 DB먼저 수행 후 - File 작업을 수행해야 함>
+         * -> 각 이미지들을 저장할 경로를 가진 ItemImage 엔티티들을 DB에 save한 후 -> 실제 그 경로에 각 사진을 저장한다. */
+
+        /**
+         * 이미지 엔티티에 저장
+         * 각각 save하는 것보다, saveAll 하는게 트랜잭션 상 성능이 더 좋아요!
+         * */
+        if(!CollectionUtils.isEmpty(reviewNewParamDto.getImageFiles())){
+            List<String> imgPaths = awsS3ServiceUtil.upload(reviewNewParamDto.getImageFiles());
             for (String imgUrl : imgPaths) {
                 ReviewImage img = ReviewImage.builder()
                         .url(imgUrl)
@@ -121,8 +111,6 @@ public class ReviewService {
         }
     }
 
-
-    //페이징 처리가 안되는 문제
     public List<Review> getMyReviewList(Long memberId) {
         return reviewRepository.findAllByMemberIdAndStatus(memberId,ACTIVE);
     }
@@ -134,14 +122,15 @@ public class ReviewService {
 
         for(Review review:myReviewList){
 
-            Map<String,List<String>> hairMap = getHairStylesAndTypes(review);
 
             ReviewMyListInfoDto reviewMyListInfoDto = ReviewMyListInfoDto.builder()
                     .shopName(review.getHairShopName())
                     .price(review.getPrice())
                     .reviewId(review.getId())
-                    .hairTypes(hairMap.get("hairStyles"))
-                    .hairStyles(hairMap.get("hairTypes"))
+                    .straightening(review.getStraightening())
+                    .dyeing(review.getDyeing())
+                    .hairCut(review.getHairCut())
+                    .perm(review.getPerm())
                     .build();
 
             reviewMyListInfoDtosList.add(reviewMyListInfoDto);
@@ -155,9 +144,9 @@ public class ReviewService {
 
         Review review=getReview(reviewId);
         Member member=getMember(review.getMember().getId());
+
         List<String> reviewImageList=reviewImageService.getReviewImages(reviewId);
 
-        Map<String,List<String>> hairMap=getHairStylesAndTypes(review);
 
         if(review.getMember().getId()==loginedMember){
             checkReader=Reader.ME;
@@ -168,8 +157,9 @@ public class ReviewService {
                 .content(review.getContent())
                 .date(review.getDate())
                 .designer(review.getDesignerName())
-                .hairStyles(hairMap.get("hairStyles"))
-                .hairTypes(hairMap.get("hairTypes"))
+                .dyeing(review.getDyeing())
+                .hairCut(review.getHairCut())
+                .perm(review.getPerm())
                 .shopName(review.getHairShopName())
                 .lengthStatus(review.getLengthStatus())
                 .price(review.getPrice())
@@ -181,32 +171,40 @@ public class ReviewService {
                 .build();
     }
 
-    public Map<String,List<String>> getHairStylesAndTypes(Review review){
 
-        Map<String,List<String>> hairMap=new ConcurrentHashMap<>();
-        List<String> hairStyles= new ArrayList<>();
-        List<String> hairTypes=new ArrayList<>();
-
-        if(review.getDyeing()!= Dyeing.NONE){
-            hairStyles.add(String.valueOf(review.getDyeing()));
-            hairTypes.add("염색");
-        }
-        if(review.getPerm()!= Perm.NONE){
-            hairStyles.add(String.valueOf(review.getPerm()));
-            hairTypes.add("펌");
-        }
-        if(review.getStraightening()!= Straightening.NONE){
-            hairStyles.add(String.valueOf(review.getStraightening()));
-            hairTypes.add("매직");
-        }
-        if(review.getHairCut()!= Hair_Cut.NONE){
-            hairStyles.add(String.valueOf(review.getHairCut()));
-            hairTypes.add("커트");
-        }
-
-        hairMap.put("hairStyles",hairStyles);
-        hairMap.put("hairTypes",hairTypes);
-
-        return hairMap;
+    /**
+     * cut, perm, dyeing, straightening이 DTO로 들어올때부터 기본이 NONE으로 받는다고 가정
+     * */
+    private Review createReview(ReviewNewParamDto reviewNewParamDto, Member member){
+        return Review.builder()
+                .content(reviewNewParamDto.getContent())
+                .date(reviewNewParamDto.getDate())
+                .status(ACTIVE)// 삭제하면 Status.INACTIVE로 변경
+                .designerName(reviewNewParamDto.getDesignerName())
+                .satisfaction(reviewNewParamDto.getSatisfaction())
+                .hairShopName(reviewNewParamDto.getShopName())
+                .price(reviewNewParamDto.getPrice())
+                .content(reviewNewParamDto.getContent())
+                .hairCut(reviewNewParamDto.getHairCut())
+                .dyeing(reviewNewParamDto.getDyeing())
+                .straightening(reviewNewParamDto.getStraightening())
+                .perm(reviewNewParamDto.getPerm())
+                .lengthStatus(reviewNewParamDto.getLengthStatus())
+                .member(member)
+                .build();
     }
+
+//    if(!CollectionUtils.isEmpty(reviewNewParamDto.getImageFiles())){
+//        List<String> imgPaths = awsS3ServiceUtil.upload(reviewNewParamDto.getImageFiles());
+//        for (String imgUrl : imgPaths) {
+//            ReviewImage img = ReviewImage.builder()
+//                    .url(imgUrl)
+//                    .status(ACTIVE)
+//                    .review(review)
+//                    .build();
+//            reviewImageService.saveImage(img);
+//        }
+//    private List<ReviewImage> createReivewImageList(List<String> imagePaths, Review review){
+//
+//    }
 }
