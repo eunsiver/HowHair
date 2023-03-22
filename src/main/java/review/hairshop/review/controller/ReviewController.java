@@ -1,14 +1,12 @@
 package review.hairshop.review.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import review.hairshop.common.response.ApiResponse;
 import review.hairshop.review.dto.*;
 import review.hairshop.review.service.ReviewService;
 import review.hairshop.review_image.service.ReviewImageService;
-
-import javax.validation.Valid;
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -23,11 +21,12 @@ public class ReviewController {
     /**
      * 리뷰작성 -> 내가 쓴 리뷰 확인할 수 있도록 정보들 넘겨줌
      */
+    /**
+     * 이미지 수정
+     * */
     @PostMapping("/new")
-    public ApiResponse<ReviewResponseDto> postReview(@RequestAttribute Long memberId,@Valid ReviewNewReqDto reviewRequestDto){
-        /**
-         * paramDto로 다시 셋하는게 맞나? 효율적인가?
-         * */
+    public ApiResponse<ReviewResponseDto> postReview(@RequestAttribute Long memberId,@Validated @RequestBody ReviewNewReqestDto reviewRequestDto){
+
         ReviewNewParamDto reviewNewParamDto = ReviewNewParamDto.builder()
                 .content(reviewRequestDto.getContent())
                 .date(reviewRequestDto.getDate())
@@ -43,7 +42,7 @@ public class ReviewController {
                 .imageFiles(reviewRequestDto.getImageFiles())
                 .build();
 
-        Long reviewId = reviewService.createReview(memberId, reviewNewParamDto);
+        Long reviewId = reviewService.registerReview(memberId, reviewNewParamDto);
 
         return ApiResponse.success(ReviewResponseDto.builder().reviewId(reviewId).build());
     }
@@ -52,15 +51,17 @@ public class ReviewController {
      * 해당 리뷰 상세 조회 -> 내가 쓴 리뷰와 다른 사람 리뷰 조회 구분 -> Reader.ME, Reader.OTHER -> 리뷰 삭제 활성화 비활성화
      **/
     @GetMapping("/{review_id}")
-    public ApiResponse<ReviewAllInfoResDto> getReview(@RequestAttribute Long memberId,@PathVariable("review_id")Long reviewId){
+    public ApiResponse<ReviewAllInfoResponseDto> getReview(@RequestAttribute Long memberId, @PathVariable("review_id")Long reviewId){
         // 게시글 아이디 받아와서 정보 값들을 넘겨 받음
         ReviewAllInfoDto reviewAllInfoDto = reviewService.showReviewInfo(memberId,reviewId);
-        return ApiResponse.success(ReviewAllInfoResDto.builder()
+
+        return ApiResponse.success(ReviewAllInfoResponseDto.builder()
                         .memberName(reviewAllInfoDto.getMemberName())
                         .designer(reviewAllInfoDto.getDesigner())
                         .imageUrls(reviewAllInfoDto.getImageUrls())
-                        .hairStyles(reviewAllInfoDto.getHairStyles())
-                        .hairTypes(reviewAllInfoDto.getHairTypes())
+                        .hairCut(reviewAllInfoDto.getHairCut())
+                        .dyeing(reviewAllInfoDto.getDyeing())
+                        .perm(reviewAllInfoDto.getPerm())
                         .gender(reviewAllInfoDto.getGender())
                         .createAt(reviewAllInfoDto.getCreateAt())
                         .content(reviewAllInfoDto.getContent())
@@ -77,29 +78,29 @@ public class ReviewController {
      * ACTIVE한 것들만 가져오기
      **/
     @GetMapping("/my")
-    public ApiResponse<ReviewMyListResDto> getMyReviewAll(@RequestAttribute Long memberId){
+    public ApiResponse<ReviewMyListRespnseDto> getMyReviewAll(@RequestAttribute Long memberId){
         // 게시글 아이디 받아와서 정보 값들을 넘겨 받음
-        List<ReviewMyListInfoDto> myReviewInfoList = reviewService.getMyReviewInfoList(memberId);
-
-        return ApiResponse.success(ReviewMyListResDto.builder().reviewMyListResDtos(myReviewInfoList).build());
+        return ApiResponse.success(ReviewMyListRespnseDto.builder().reviewMyListResDtos(reviewService.getMyReviewInfoList(memberId)).build());
     }
 
 
     /**
      * 리뷰 이미지 조회
      * ACTIVE한 것들만 가져오기
+     * 리뷰 이미지 path로 조회할 수 있도록 다시 수정
      **/
-    @GetMapping("/image/{review_id}")
-    public ApiResponse<ReviewImageResDto> getReviewImage(@PathVariable("review_id")Long reviewId){
-
-        return ApiResponse.success(ReviewImageResDto.builder()
-                .reviewImages(reviewImageService.getReviewImages(reviewId))
-                .build());
-    }
+//    @GetMapping("/image/{review_id}")
+//    public ApiResponse<ReviewImageResDto> getReviewImage(@PathVariable("review_id")Long reviewId){
+//
+//        return ApiResponse.success(ReviewImageResDto.builder()
+//                .reviewImages(reviewImageService.getReviewImages(reviewId))
+//                .build());
+//    }
 
 
     /**
      * 자기가 쓴 리뷰만 삭제할 수 있음
+     * 이미지와 리뷰 모두 INACTIVE
      * */
     @PatchMapping("/withdraw/{review_id}")
     public ApiResponse<ReviewResponseMessageDto> patchReview(@RequestAttribute Long memberId, @PathVariable("review_id")Long reviewId){
