@@ -10,6 +10,7 @@ import review.hairshop.common.enums.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -51,9 +52,9 @@ ReviewReqestDto {
     @NotNull(message = "가격은 필수 값입니다.")
     private Long price;
 
-    //사진 리스트로 넘어옴
-    @Size(max=5)
-    private List<MultipartFile> imageFiles;
+    //사진 리스트로 넘어옴, 이미지를 안넣을 수도 있으니 ArrayList로 초기화해줌.
+    @Size(max=5, message = "사진은 최대 5장 까지 등록 가능합니다.")
+    private List<MultipartFile> imageFiles = new ArrayList<>();
 
     // 내용
     @NotNull(message = "내용은 필수 값입니다.")

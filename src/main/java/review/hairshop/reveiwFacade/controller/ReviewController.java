@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import review.hairshop.common.response.ApiResponse;
 import review.hairshop.reveiwFacade.dto.requestDto.ReviewReqestDto;
 import review.hairshop.reveiwFacade.dto.ReviewParamDto;
-import review.hairshop.reveiwFacade.dto.responseDto.MyReviewListResponseDto;
 import review.hairshop.reveiwFacade.dto.responseDto.ReviewResponseDto;
 import review.hairshop.reveiwFacade.dto.responseDto.ReviewResponseMessageDto;
 import review.hairshop.reveiwFacade.service.ReviewService;
@@ -27,7 +26,7 @@ public class ReviewController {
      * 이미지 수정
      * */
     @PostMapping("/new")
-    public ApiResponse<ReviewResponseDto> postReview(@RequestAttribute Long memberId, @Validated @RequestBody ReviewReqestDto reviewRequestDto){
+    public ApiResponse<ReviewResponseDto> postReview(@RequestAttribute Long memberId, @Validated ReviewReqestDto reviewRequestDto){
 
         ReviewParamDto reviewParamDto = ReviewParamDto.builder()
                 .content(reviewRequestDto.getContent())
