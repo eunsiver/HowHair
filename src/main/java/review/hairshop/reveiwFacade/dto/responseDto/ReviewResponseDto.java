@@ -17,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 public class ReviewResponseDto {
+    private Long reviewId;
     //이 글을 직접 쓴 사람인지
     private isReaderSameWriter isReaderSameWriter;
     //헤어샵 이름

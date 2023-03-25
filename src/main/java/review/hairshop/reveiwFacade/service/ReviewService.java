@@ -85,15 +85,13 @@ public class ReviewService {
     public void withdrawReview(Long reviewId, Long memberId) {
         //리뷰를 가지고 옴
         Review review=getReview(reviewId);
+
         //리뷰를 삭제할 권한이 있는지 확인
-        if(memberId.equals(review.getMember().getId())) {
+        if(!memberId.equals(review.getMember().getId())) {
             throw new ApiException(ApiResponseStatus.NOT_AUTHORIZED, "작성자가 아니므로 현 게시물을 삭제할 수 없습니다.");
         }
-        List<ReviewImage> reviewImageList = reviewImageRepository.findAllByReviewIdAndStatus(review.getId(),ACTIVE);
-
-        if(reviewImageList.isEmpty()) return;
-
-        reviewImageList.forEach(i->i.changeStatus(INACTIVE));
+        //리뷰를 INACTIVE로 하면 리뷰이미지는 종속적인 관계로 불러올 수 없음. 따라서 리뷰이미지는 굳이 INACTIVE 시키지 않음.
+        review.changeStatus(INACTIVE);
     }
 
     public ReviewResponseDto getReviewDetails(Long loginedMemberId,Long reviewId) {
@@ -131,6 +129,7 @@ public class ReviewService {
 
     public ReviewResponseDto createReveiewResponse(Member member, Review review, List<String> imageUrl) {
         return ReviewResponseDto.builder()
+                .reviewId(review.getId())
                 .isReaderSameWriter(member.getId().equals(review.getMember().getId()) ? SAME : DIFF)
                 .shopName(review.getHairShopName())
                 .imageUrls(imageUrl)
