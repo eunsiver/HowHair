@@ -1,4 +1,4 @@
-package review.hairshop.review.dto;
+package review.hairshop.reveiwFacade.dto.requestDto;
 
 
 import lombok.*;
@@ -19,7 +19,7 @@ import java.util.List;
 public class
 
 
-ReviewNewReqestDto {
+ReviewReqestDto {
     //미용실 이름
     @NotNull(message = "미용실 이름은 필수 값입니다.")
     private String shopName;
@@ -52,7 +52,7 @@ ReviewNewReqestDto {
     private Long price;
 
     //사진 리스트로 넘어옴
-    @Size//몇개 제한
+    @Size(max=5)
     private List<MultipartFile> imageFiles;
 
     // 내용

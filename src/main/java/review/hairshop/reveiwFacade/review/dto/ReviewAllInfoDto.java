@@ -1,4 +1,4 @@
-package review.hairshop.review.dto;
+package review.hairshop.reveiwFacade.review.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +16,7 @@ import java.util.List;
 @Getter
 public class ReviewAllInfoDto {
     //이 글을 직접 쓴 사람인지 확인
-    private Reader reader;
+    private isReaderSameWriter isReaderSameWriter;
     //헤어샵 이름
     private String shopName;
     //리뷰 사진들

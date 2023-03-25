@@ -1,10 +1,10 @@
-package review.hairshop.review_image;
+package review.hairshop.reveiwFacade.review_image;
 
 
 import lombok.*;
 import review.hairshop.common.BasicEntity;
 import review.hairshop.common.enums.Status;
-import review.hairshop.review.Review;
+import review.hairshop.reveiwFacade.review.Review;
 
 import javax.persistence.*;
 

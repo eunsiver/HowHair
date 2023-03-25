@@ -1,4 +1,4 @@
-package review.hairshop.review.dto;
+package review.hairshop.reveiwFacade.dto.responseDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ReviewMyListRespnseDto {
-    List<ReviewMyListInfoDto> reviewMyListResDtos;
+@AllArgsConstructor
+public class ReviewImageResponseDto {
+    List<String> reviewImages;
 }

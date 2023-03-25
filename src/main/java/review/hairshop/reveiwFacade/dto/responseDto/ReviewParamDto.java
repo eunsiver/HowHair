@@ -1,4 +1,4 @@
-package review.hairshop.review.dto;
+package review.hairshop.reveiwFacade.dto.responseDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @Getter
-public class ReviewNewParamDto {
+public class ReviewParamDto {
 
     //미용실 이름
     private String shopName;
