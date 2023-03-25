@@ -8,11 +8,12 @@ import review.hairshop.common.response.ApiResponseStatus;
 import review.hairshop.common.utils.FilesUtil;
 import review.hairshop.member.Member;
 import review.hairshop.member.repository.MemberRepository;
+import review.hairshop.reveiwFacade.dto.ReviewMyListInfoDto;
 import review.hairshop.reveiwFacade.dto.responseDto.ReviewResponseDto;
 import review.hairshop.reveiwFacade.review_image.ReviewImage;
 import review.hairshop.reveiwFacade.review_image.repository.ReviewImageRepository;
 import review.hairshop.reveiwFacade.review.Review;
-import review.hairshop.reveiwFacade.dto.responseDto.ReviewParamDto;
+import review.hairshop.reveiwFacade.dto.ReviewParamDto;
 import review.hairshop.reveiwFacade.review.repository.ReviewRepository;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -58,8 +59,8 @@ public class ReviewService {
 
         /** 2_2.그렇지 않고 함께 등록할 이미지가 하나 이상 존재하면   <항상 DB먼저 수행 후 - File 작업을 수행해야 함>
          * -> 각 이미지들을 저장할 경로를 가진 ReviewImage 엔티티들을 DB에 save한 후 -> 실제 그 경로에 각 사진을 저장한다. */
-        List<String> createdImgPath = filesUtil.createImagePath(review.getId(), reviewParamDto.getImageFiles());
-        List<ReviewImage> reviewImageList = createdImgPath.stream()
+        List<String> createdImagePath = filesUtil.createImagePath(review.getId(), reviewParamDto.getImageFiles());
+        List<ReviewImage> reviewImageList = createdImagePath.stream()
                 .map(i -> ReviewImage.builder().review(review).status(ACTIVE).url(i).build())
                 .collect(Collectors.toList());
         /**
@@ -68,96 +69,66 @@ public class ReviewService {
          * */
         reviewImageRepository.saveAll(reviewImageList);
 
-        /**
-         * s3에 저장
-         * */
-        filesUtil.putImageInS3(createdImgPath, reviewParamDto.getImageFiles());
-        return createReveiewResponse(member, review, createdImgPath);
+        /**s3에 저장: aws위치+새로만든 이미지 경로 **/
+        filesUtil.putImageInS3(createdImagePath, reviewParamDto.getImageFiles());
+        List<String> awsImagePath=filesUtil.getImageUrlList(createdImagePath);
+        return createReveiewResponse(member, review, awsImagePath);
     }
-
 
     /**
      * 리뷰 삭제
-     * delete하는 것이 아니라 Status를 active->inactive로 변경
-     * 이미지들도 inactive로 변경
-     * <p>
-     * 프론트에서 게시글 번호를 전달 받음
-     * 리뷰를 작성한 자와 현재 로그인한 자가 같은지 확인하여 INACTIVE
-     * <p>
+     * delete하는 것이 아니라 Status를 active->inactive로 변경, 이미지들도 inactive로 변경
+     * 프론트에서 게시글 번호를 전달 받음 -> 리뷰를 작성한 자와 현재 로그인한 자가 같은지 확인하여 INACTIVE
      * 해당 유저가 리뷰이미지를 하나도 안 올릴 수 있음을 유의!
      **/
-//    @Transactional
-//    public void withdrawReview(Long reviewId, Long memberId) {
-//        //리뷰를 가지고 옴
-//        Review review=getReview(reviewId);
-//        Member member=getMember(memberId);
-//
-//        if(review.getMember().getId() == member.getId()){
-//
-//            reviewImageService.changeImageInactive(review);
-//            review.changeStatus(INACTIVE);
-//        }
-//    }
-//
-//    public List<Review> getMyReviewList(Long memberId) {
-//        return reviewRepository.findAllByMemberIdAndStatus(memberId,ACTIVE);
-//    }
-//    public List<ReviewMyListInfoDto> getMyReviewInfoList(Long memberId){
-//
-//        List<Review> myReviewList = getMyReviewList(memberId);
-//        List<ReviewMyListInfoDto> reviewMyListInfoDtosList =new ArrayList<>();
-//
-//
-//        for(Review review:myReviewList){
-//
-//
-//            ReviewMyListInfoDto reviewMyListInfoDto = ReviewMyListInfoDto.builder()
-//                    .shopName(review.getHairShopName())
-//                    .price(review.getPrice())
-//                    .reviewId(review.getId())
-//                    .straightening(review.getStraightening())
-//                    .dyeing(review.getDyeing())
-//                    .hairCut(review.getHairCut())
-//                    .perm(review.getPerm())
-//                    .build();
-//
-//            reviewMyListInfoDtosList.add(reviewMyListInfoDto);
-//        }
-//        return reviewMyListInfoDtosList;
-//    }
-//
-//    public ReviewAllInfoDto showReviewInfo(Long loginedMember,Long reviewId) {
-//
-//        isReaderSameWriter checkIsReaderSameWriter = DIFF;
-//
-//        Review review=getReview(reviewId);
-//        Member member=getMember(review.getMember().getId());
-//
-//        List<String> reviewImageList=reviewImageService.getReviewImages(reviewId);
-//
-//
-//        if(review.getMember().getId()==loginedMember){
-//            checkIsReaderSameWriter = SAME;
-//        }
-//
-//        return ReviewAllInfoDto.builder()
-//                .createAt(review.getCreatedAt())
-//                .content(review.getContent())
-//                .date(review.getDate())
-//                .designer(review.getDesignerName())
-//                .dyeing(review.getDyeing())
-//                .hairCut(review.getHairCut())
-//                .perm(review.getPerm())
-//                .shopName(review.getHairShopName())
-//                .lengthStatus(review.getLengthStatus())
-//                .price(review.getPrice())
-//                .satisfaction(review.getSatisfaction())
-//                .memberName(member.getName())
-//                .gender(member.getGender())
-//                .imageUrls(reviewImageList)
-//                .isReaderSameWriter(checkIsReaderSameWriter)
-//                .build();
-//    }
+    @Transactional
+    public void withdrawReview(Long reviewId, Long memberId) {
+        //리뷰를 가지고 옴
+        Review review=getReview(reviewId);
+        //리뷰를 삭제할 권한이 있는지 확인
+        if(memberId.equals(review.getMember().getId())) {
+            throw new ApiException(ApiResponseStatus.NOT_AUTHORIZED, "작성자가 아니므로 현 게시물을 삭제할 수 없습니다.");
+        }
+        List<ReviewImage> reviewImageList = reviewImageRepository.findAllByReviewIdAndStatus(review.getId(),ACTIVE);
+
+        if(reviewImageList.isEmpty()) return;
+
+        reviewImageList.forEach(i->i.changeStatus(INACTIVE));
+    }
+
+    public ReviewResponseDto getReviewDetails(Long loginedMemberId,Long reviewId) {
+
+        Review review=getReview(reviewId);
+        Member member=getMember(loginedMemberId);
+
+        List<ReviewImage> reviewImageList=review.getReviewImageList();
+
+        if(reviewImageList.isEmpty()){
+            List<String> reviewSampleImgPaths=filesUtil.getSampleUrlList();
+            return createReveiewResponse(member,review,reviewSampleImgPaths);
+        }
+
+        List<String> reviewPath=reviewImageList.stream()
+                .map(i->i.getUrl())
+                .collect(Collectors.toList());
+
+        List<String> reviewImgPaths=filesUtil.getImageUrlList(reviewPath);
+
+        return createReveiewResponse(member,review,reviewImgPaths);
+    }
+
+    public ReviewMyListInfoDto createMyReviewListInfoDto(Review review){
+        return ReviewMyListInfoDto.builder()
+                .shopName(review.getHairShopName())
+                .price(review.getPrice())
+                .reviewId(review.getId())
+                .straightening(review.getStraightening())
+                .dyeing(review.getDyeing())
+                .hairCut(review.getHairCut())
+                .perm(review.getPerm())
+                .build();
+    }
+
     public ReviewResponseDto createReveiewResponse(Member member, Review review, List<String> imageUrl) {
         return ReviewResponseDto.builder()
                 .isReaderSameWriter(member.getId().equals(review.getMember().getId()) ? SAME : DIFF)

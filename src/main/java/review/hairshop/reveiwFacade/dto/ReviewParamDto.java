@@ -1,4 +1,4 @@
-package review.hairshop.reveiwFacade.dto.responseDto;
+package review.hairshop.reveiwFacade.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

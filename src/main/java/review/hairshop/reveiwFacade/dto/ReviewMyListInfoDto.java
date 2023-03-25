@@ -1,4 +1,4 @@
-package review.hairshop.reveiwFacade.review.dto;
+package review.hairshop.reveiwFacade.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,8 +16,8 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 public class ReviewMyListInfoDto {
-//    //사진 하나를 어떤걸로??
-//    private String shopImg;
+//사진 하나를 어떤걸로??
+    private String shopImg;
 
     //리뷰 id
     private Long reviewId;

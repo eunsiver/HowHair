@@ -10,7 +10,5 @@ import java.util.List;
 @Repository
 public interface ReviewImageRepository extends JpaRepository<ReviewImage, Long> {
 
-    List<ReviewImage> findAllByReviewId(Long reviewId);
-
     List<ReviewImage> findAllByReviewIdAndStatus(Long reviewId, Status active);
 }
