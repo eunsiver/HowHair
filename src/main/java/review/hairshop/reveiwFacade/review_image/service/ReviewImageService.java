@@ -1,12 +1,11 @@
-package review.hairshop.review_image.service;
+package review.hairshop.reveiwFacade.review_image.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import review.hairshop.member.Member;
-import review.hairshop.review.Review;
-import review.hairshop.review_image.ReviewImage;
-import review.hairshop.review_image.repository.ReviewImageRepository;
+import review.hairshop.reveiwFacade.review.Review;
+import review.hairshop.reveiwFacade.review_image.ReviewImage;
+import review.hairshop.reveiwFacade.review_image.repository.ReviewImageRepository;
 
 import java.util.ArrayList;
 import java.util.List;

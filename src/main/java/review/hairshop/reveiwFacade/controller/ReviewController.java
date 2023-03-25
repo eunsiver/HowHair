@@ -1,12 +1,17 @@
-package review.hairshop.review.controller;
+package review.hairshop.reveiwFacade.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import review.hairshop.common.response.ApiResponse;
-import review.hairshop.review.dto.*;
-import review.hairshop.review.service.ReviewService;
-import review.hairshop.review_image.service.ReviewImageService;
+import review.hairshop.reveiwFacade.dto.requestDto.ReviewReqestDto;
+import review.hairshop.reveiwFacade.dto.responseDto.ReviewParamDto;
+import review.hairshop.reveiwFacade.dto.responseDto.ReviewResponseDto;
+import review.hairshop.reveiwFacade.dto.responseDto.ReviewMyListRespnseDto;
+import review.hairshop.reveiwFacade.dto.responseDto.ReviewResponseMessageDto;
+import review.hairshop.reveiwFacade.review.dto.*;
+import review.hairshop.reveiwFacade.service.ReviewService;
+import review.hairshop.reveiwFacade.review_image.service.ReviewImageService;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,9 +30,9 @@ public class ReviewController {
      * 이미지 수정
      * */
     @PostMapping("/new")
-    public ApiResponse<ReviewResponseDto> postReview(@RequestAttribute Long memberId,@Validated @RequestBody ReviewNewReqestDto reviewRequestDto){
+    public ApiResponse<ReviewResponseDto> postReview(@RequestAttribute Long memberId, @Validated @RequestBody ReviewReqestDto reviewRequestDto){
 
-        ReviewNewParamDto reviewNewParamDto = ReviewNewParamDto.builder()
+        ReviewParamDto reviewParamDto = ReviewParamDto.builder()
                 .content(reviewRequestDto.getContent())
                 .date(reviewRequestDto.getDate())
                 .shopName(reviewRequestDto.getShopName())
@@ -42,20 +47,18 @@ public class ReviewController {
                 .imageFiles(reviewRequestDto.getImageFiles())
                 .build();
 
-        Long reviewId = reviewService.registerReview(memberId, reviewNewParamDto);
-
-        return ApiResponse.success(ReviewResponseDto.builder().reviewId(reviewId).build());
+        return ApiResponse.success(reviewService.registerReview(memberId, reviewParamDto));
     }
 
     /**
      * 해당 리뷰 상세 조회 -> 내가 쓴 리뷰와 다른 사람 리뷰 조회 구분 -> Reader.ME, Reader.OTHER -> 리뷰 삭제 활성화 비활성화
      **/
     @GetMapping("/{review_id}")
-    public ApiResponse<ReviewAllInfoResponseDto> getReview(@RequestAttribute Long memberId, @PathVariable("review_id")Long reviewId){
+    public ApiResponse<ReviewResponseDto> getReview(@RequestAttribute Long memberId, @PathVariable("review_id")Long reviewId){
         // 게시글 아이디 받아와서 정보 값들을 넘겨 받음
         ReviewAllInfoDto reviewAllInfoDto = reviewService.showReviewInfo(memberId,reviewId);
 
-        return ApiResponse.success(ReviewAllInfoResponseDto.builder()
+        return ApiResponse.success(ReviewResponseDto.builder()
                         .memberName(reviewAllInfoDto.getMemberName())
                         .designer(reviewAllInfoDto.getDesigner())
                         .imageUrls(reviewAllInfoDto.getImageUrls())
@@ -69,7 +72,7 @@ public class ReviewController {
                         .lengthStatus(reviewAllInfoDto.getLengthStatus())
                         .price(reviewAllInfoDto.getPrice())
                         .satisfaction(reviewAllInfoDto.getSatisfaction())
-                        .reader(reviewAllInfoDto.getReader())
+                        .isReaderSameWriter(reviewAllInfoDto.getIsReaderSameWriter())
                         .shopName(reviewAllInfoDto.getShopName()).build());
     }
 

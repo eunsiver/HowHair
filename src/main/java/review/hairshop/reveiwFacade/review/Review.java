@@ -1,4 +1,4 @@
-package review.hairshop.review;
+package review.hairshop.reveiwFacade.review;
 
 import lombok.*;
 import review.hairshop.bookmark.Bookmark;

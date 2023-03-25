@@ -1,4 +1,4 @@
-package review.hairshop.review.dto;
+package review.hairshop.reveiwFacade.dto.responseDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import review.hairshop.common.enums.*;
 
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,9 +16,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ReviewAllInfoResponseDto {
+public class ReviewResponseDto {
     //이 글을 직접 쓴 사람인지
-    private Reader reader;
+    private isReaderSameWriter isReaderSameWriter;
     //헤어샵 이름
     private String shopName;
     //리뷰 사진들
