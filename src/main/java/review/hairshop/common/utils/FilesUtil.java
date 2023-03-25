@@ -57,4 +57,9 @@ public class FilesUtil {
                         "image/"+today+"/"+reviewNum+"/"+ UUID.randomUUID().toString().substring(0,8)+"."+FilenameUtils.getExtension(i.getOriginalFilename())
                                 ).collect(Collectors.toList());
     }
+    public List<String> getImageUrlList(List<String> pathList){
+        return pathList.stream()
+                .map(p -> url + "/" + p)
+                .collect(Collectors.toList());
+    }
 }

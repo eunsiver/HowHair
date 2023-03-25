@@ -5,6 +5,8 @@ import review.hairshop.bookmark.Bookmark;
 import review.hairshop.common.BasicEntity;
 import review.hairshop.common.enums.*;
 import review.hairshop.member.Member;
+import review.hairshop.reveiwFacade.review_image.ReviewImage;
+
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.LinkedList;
@@ -67,8 +69,8 @@ public class Review extends BasicEntity{
     @OneToMany(mappedBy = "review")
     private List<Bookmark> bookmarkList = new LinkedList<>();
 
-//    @OneToMany(mappedBy = "review")
-//    private List<ReviewImage> reviewImageList = new LinkedList<>();
+    @OneToMany(mappedBy = "review")
+    private List<ReviewImage> reviewImageList = new LinkedList<>();
 
     /**
      * [변경 메서드]

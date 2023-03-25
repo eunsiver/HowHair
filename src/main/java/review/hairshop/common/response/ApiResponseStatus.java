@@ -60,6 +60,8 @@ public enum ApiResponseStatus {
     WRONG_IMAGE(false,2123 ,"이미지를 업로드 할 수 없습니다." ),
     INVALID_REVIEW(false,2124,"리뷰를 불러올 수 없습니다."),
 
+    NOT_AUTHORIZED(false,2125,"권한이 없습니다."),
+
 
     /**
      * 3000 : Response 오류
