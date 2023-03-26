@@ -25,19 +25,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 public class BookmarkServiceTest {
 
-    @PersistenceContext
-    EntityManager em;
-
+    @PersistenceContext EntityManager em;
     @Autowired BookmarkService bookmarkService;
     @Autowired ReviewRepository reviewRepository;
     @Autowired
     MemberRepository memberRepository;
-
-//    @BeforeAll
-//    static void setup(){
-//
-//    }
-
     @Test
     void 북마크() throws Exception {
         //given
@@ -87,7 +79,6 @@ public class BookmarkServiceTest {
         Review checkReview=reviewRepository.findByIdAndStatus(review.getId(),Status.ACTIVE).orElseThrow();
 
         assertEquals(checkReview.getBookmarkCount(),3);
-
     }
     private Member createMember(String name) {
          Member member=Member.builder()
