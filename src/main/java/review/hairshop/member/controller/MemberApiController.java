@@ -18,7 +18,7 @@ import static review.hairshop.common.consts.SessionConst.MEMBER_ID;
 
 @RestController
 @RequiredArgsConstructor
-public class MemberController {
+public class MemberApiController {
 
     private final MemberService memberService;
 

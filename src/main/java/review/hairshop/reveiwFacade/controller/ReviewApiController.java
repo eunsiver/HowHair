@@ -13,7 +13,7 @@ import review.hairshop.reveiwFacade.service.ReviewService;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/review")
-public class ReviewController {
+public class ReviewApiController {
     private final ReviewService reviewService;
 
 

@@ -17,6 +17,8 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 public class ReviewResponseDto {
+    //북마크 수
+    private int bookmarkCount;
     private Long reviewId;
     //이 글을 직접 쓴 사람인지
     private isReaderSameWriter isReaderSameWriter;
@@ -48,6 +50,4 @@ public class ReviewResponseDto {
     private Long price;
     //내용
     private String content;
-
-    //북마크 수
 }

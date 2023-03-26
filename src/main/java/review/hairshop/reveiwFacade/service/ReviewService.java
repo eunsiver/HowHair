@@ -145,6 +145,7 @@ public class ReviewService {
                 .lengthStatus(review.getLengthStatus())
                 .price(review.getPrice())
                 .content(review.getContent())
+                .bookmarkCount(review.getBookmarkCount())
                 .build();
     }
 
@@ -166,7 +167,7 @@ public class ReviewService {
                 .straightening(reviewParamDto.getStraightening())
                 .perm(reviewParamDto.getPerm())
                 .lengthStatus(reviewParamDto.getLengthStatus())
-                .member(member)
+                .bookmarkCout(0)
                 .build();
     }
 

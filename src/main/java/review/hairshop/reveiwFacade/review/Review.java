@@ -52,6 +52,8 @@ public class Review extends BasicEntity{
 
     private LocalDate date;
 
+    private int bookmarkCount;
+
     @Enumerated(EnumType.STRING)
     private Hair_Cut hairCut;
 
@@ -80,7 +82,7 @@ public class Review extends BasicEntity{
     }
 
     @Builder
-    public Review(Satisfaction satisfaction, String hairShopName, String designerName, LengthStatus lengthStatus, Status status, Long price, String content, LocalDate date, Hair_Cut hairCut, Dyeing dyeing, Perm perm, Straightening straightening, Member member, List<Bookmark> bookmarkList) {
+    public Review(Satisfaction satisfaction, String hairShopName, String designerName, LengthStatus lengthStatus, Status status, Long price, String content, LocalDate date, Hair_Cut hairCut, Dyeing dyeing, Perm perm, Straightening straightening, Member member, List<Bookmark> bookmarkList,int bookmarkCout) {
         this.satisfaction = satisfaction;
         this.hairShopName = hairShopName;
         this.designerName = designerName;
@@ -95,6 +97,7 @@ public class Review extends BasicEntity{
         this.straightening = straightening;
         this.member = member;
         this.bookmarkList = bookmarkList;
+        this.bookmarkCount = bookmarkCout;
 
         member.getReviewList().add(this);
     }
