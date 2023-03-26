@@ -28,7 +28,7 @@ public class Bookmark {
     private Review review;
 
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private Status status;//ACTIVE: 좋아요, INACTIVE: 좋아요 취소
 
     public void addReview(Review review){
         this.review=review;

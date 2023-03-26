@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import review.hairshop.common.enums.Status;
 import review.hairshop.member.Member;
+import review.hairshop.reveiwFacade.review.Review;
 
 import java.util.Optional;
 

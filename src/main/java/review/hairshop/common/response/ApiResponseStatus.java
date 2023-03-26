@@ -59,8 +59,8 @@ public enum ApiResponseStatus {
     INVALID_MEMBER(false, 2122, "로그인된 회원이 아닙니다."),
     WRONG_IMAGE(false,2123 ,"이미지를 업로드 할 수 없습니다." ),
     INVALID_REVIEW(false,2124,"리뷰를 불러올 수 없습니다."),
-
     NOT_AUTHORIZED(false,2125,"권한이 없습니다."),
+    INVALID_BOOKMARK(false,2126 ,"존재하지 않는 북마크입니다."),
 
 
     /**

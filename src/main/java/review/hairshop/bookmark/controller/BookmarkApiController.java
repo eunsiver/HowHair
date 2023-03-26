@@ -15,17 +15,20 @@ public class BookmarkApiController {
     //필터 조건에 따른 Review 리스트 조회
     //내가 쓴 리뷰 리스트 조회
     //북마크 한 리뷰 리스트 조회
-    @GetMapping("")
-    public void getBookmarkCount(){
 
-    }
+    /**
+     * 북마크
+     * */
     @PostMapping("/{reviewId}")
     public void postBookmark(@RequestAttribute Long memberId, @PathVariable("reviewId")Long reviewId){
-
+        bookmarkService.doBookmark(memberId,reviewId);
     }
 
+    /**
+     * 북마크 취소
+     * */
     @PatchMapping("reviewId")
     public void patchBookmark(@RequestAttribute Long memberId, @PathVariable("reviewId")Long reviewId){
-
+        bookmarkService.cancelBookmark(memberId,reviewId);
     }
 }
