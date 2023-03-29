@@ -16,4 +16,6 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     Optional<Bookmark> findByMemberAndReview(Member member, Review review);
 
     List<Bookmark> findByMemberAndStatus(Member member, Status status);
+
+    int countByReviewIdAndStatus(Long ReviewId, Status active);
 }

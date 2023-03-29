@@ -3,6 +3,7 @@ package review.hairshop.reveiwFacade.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import review.hairshop.common.response.ApiException;
 import review.hairshop.common.response.ApiResponseStatus;
 import review.hairshop.common.utils.FilesUtil;
@@ -148,7 +149,7 @@ public class ReviewService {
                 .lengthStatus(review.getLengthStatus())
                 .price(review.getPrice())
                 .content(review.getContent())
-                .bookmarkCount(review.getBookmarkCount())
+                .bookmarkCount(CollectionUtils.isEmpty(review.getBookmarkList())? 0:review.getBookmarkList().size())
                 .build();
     }//lengthStatus는 리뷰에만 있는 걸로
     //곱슬 머리는 리뷰에도 멤버에도
@@ -171,7 +172,7 @@ public class ReviewService {
                 .straightening(reviewParamDto.getStraightening())
                 .perm(reviewParamDto.getPerm())
                 .lengthStatus(reviewParamDto.getLengthStatus())
-                .bookmarkCout(0)
+                .member(member)
                 .build();
     }
 

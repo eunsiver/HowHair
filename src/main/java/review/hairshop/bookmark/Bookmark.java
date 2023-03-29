@@ -30,10 +30,28 @@ public class Bookmark {
     @Enumerated(EnumType.STRING)
     private Status status;//ACTIVE: 좋아요, INACTIVE: 좋아요 취소
 
-    public void addReview(Review review){
-        this.review=review;
+    @Builder
+
+    public Bookmark(Member member, Review review, Status status) {
+
+        this.member = member;
+        member.getBookmarkList().add(this);
+
+        this.review = review;
+        review.getBookmarkList().add(this);
+
+        this.status = status;
     }
 
+
+
+//    public void addReview(Review review){
+//        this.review=review;
+//
+//    }
+//    public void addMember(Member member){
+//        this.member=member;
+//    }
     /**
      * [변경 메서드]
      * */
