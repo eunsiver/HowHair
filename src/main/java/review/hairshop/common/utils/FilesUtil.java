@@ -29,7 +29,7 @@ public class FilesUtil {
     //리스트들로
 
     //이름 생성
-    public boolean isCorrectFormImage(List<MultipartFile> imageFiles){
+    public boolean isCorrectFormImageList(List<MultipartFile> imageFiles){
         return imageFiles.stream()
                 .map(i->FilenameUtils.getExtension(i.getOriginalFilename()))
                 .allMatch(e -> e.equals("jpeg") || e.equals("jpg") || e.equals("png") || e.equals("JPG") || e.equals("JPEG") || e.equals("PNG"));
