@@ -1,14 +1,11 @@
 package review.hairshop.bookmark.service;
 
 import lombok.RequiredArgsConstructor;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import review.hairshop.bookmark.Bookmark;
 import review.hairshop.bookmark.repository.BookmarkRepository;
 import review.hairshop.bookmark.responseDto.MyBookMarksResponseDto;
-import review.hairshop.common.config.RedisConfig;
 import review.hairshop.common.response.ApiException;
 import review.hairshop.common.response.ApiResponseStatus;
 import review.hairshop.member.Member;
@@ -30,14 +27,10 @@ public class BookmarkService {
     private final MemberRepository memberRepository;
     private final ReviewRepository reviewRepository;
     private final BookmarkRepository bookmarkRepository;
-    private final RedissonClient redissonClient;
 
-    //Redisson을 사용해보고자 했던 고민..
     @Transactional
-    public void doBookmarkUseRedisson(Long memberId, Long reviewId) {
+    public void doOnOffBookmark(Long memberId, Long reviewId) {
 
-        final String lockName="bookmark:lock";
-        final RLock lock=redissonClient.getLock(lockName);
 
         Member member = getMember(memberId);
         Review review = getReview(reviewId);
@@ -51,21 +44,19 @@ public class BookmarkService {
                     }
             );
             //북마크 O->X
-            if(bookmark.getStatus().equals("ACTIVE"))
+            if(bookmark.getStatus().equals(ACTIVE))
             {
                 bookmark.changeStatus(INACTIVE);
-                review.decreaseBookmarkCount();
+
             }
             //북마크 X->O
             else {
                 bookmark.changeStatus(ACTIVE);
-                review.increateBookmarkCount();
             }
         }
         //북마크를 한 기록이 없음(북마크 리스트에 존재하지 않음)
         else {
             bookmarkRepository.save(Bookmark.builder().status(ACTIVE).member(member).review(review).build());
-            review.increateBookmarkCount();
         }
     }
 

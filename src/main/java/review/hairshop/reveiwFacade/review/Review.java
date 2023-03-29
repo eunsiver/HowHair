@@ -52,7 +52,6 @@ public class Review extends BasicEntity{
 
     private LocalDate date;
 
-    private int bookmarkCount;
 
     @Enumerated(EnumType.STRING)
     private Hair_Cut hairCut;
@@ -77,19 +76,13 @@ public class Review extends BasicEntity{
     /**
      * [변경 메서드]
      * */
-    public void increateBookmarkCount(){
-        this.bookmarkCount+=1;
-    }
-    public void decreaseBookmarkCount(){
-        this.bookmarkCount-=1;
-    }
 
     public void changeStatus(Status status){
         this.status = status;
     }
 
     @Builder
-    public Review(Satisfaction satisfaction, String hairShopName, String designerName, LengthStatus lengthStatus, Status status, Long price, String content, LocalDate date, Hair_Cut hairCut, Dyeing dyeing, Perm perm, Straightening straightening, Member member,int bookmarkCout) {
+    public Review(Satisfaction satisfaction, String hairShopName, String designerName, LengthStatus lengthStatus, Status status, Long price, String content, LocalDate date, Hair_Cut hairCut, Dyeing dyeing, Perm perm, Straightening straightening, Member member) {
         this.satisfaction = satisfaction;
         this.hairShopName = hairShopName;
         this.designerName = designerName;
@@ -103,15 +96,6 @@ public class Review extends BasicEntity{
         this.dyeing=dyeing;
         this.straightening = straightening;
         this.member = member;
-        this.bookmarkCount = bookmarkCout;
     }
 
-    /**
-     * 연관관계 편의 메소드
-     * */
-    public void addBookmark(Bookmark bookmark){
-
-        this.bookmarkList.add(bookmark);
-        bookmark.addReview(this);
-    }
 }
