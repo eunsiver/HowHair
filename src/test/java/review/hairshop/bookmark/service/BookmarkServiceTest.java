@@ -42,11 +42,11 @@ public class BookmarkServiceTest {
         Review review=createReview(member1);
 
         //when
-        bookmarkService.doBookmark(member2.getId(),review.getId());
-        bookmarkService.doBookmark(member3.getId(),review.getId());
-        bookmarkService.doBookmark(member1.getId(),review.getId());
-        bookmarkService.doBookmark(member4.getId(),review.getId());
-        bookmarkService.doBookmark(member5.getId(),review.getId());
+        bookmarkService.doBookmarkUseRedisson(member2.getId(),review.getId());
+        bookmarkService.doBookmarkUseRedisson(member3.getId(),review.getId());
+        bookmarkService.doBookmarkUseRedisson(member1.getId(),review.getId());
+        bookmarkService.doBookmarkUseRedisson(member4.getId(),review.getId());
+        bookmarkService.doBookmarkUseRedisson(member5.getId(),review.getId());
 
         //then
         Review checkReview=reviewRepository.findByIdAndStatus(review.getId(),Status.ACTIVE).orElseThrow();
@@ -66,11 +66,11 @@ public class BookmarkServiceTest {
         Review review=createReview(member1);
 
         //when
-        bookmarkService.doBookmark(member2.getId(),review.getId());
-        bookmarkService.doBookmark(member3.getId(),review.getId());
-        bookmarkService.doBookmark(member1.getId(),review.getId());
-        bookmarkService.doBookmark(member4.getId(),review.getId());
-        bookmarkService.doBookmark(member5.getId(),review.getId());
+        bookmarkService.doBookmarkUseRedisson(member2.getId(),review.getId());
+        bookmarkService.doBookmarkUseRedisson(member3.getId(),review.getId());
+        bookmarkService.doBookmarkUseRedisson(member1.getId(),review.getId());
+        bookmarkService.doBookmarkUseRedisson(member4.getId(),review.getId());
+        bookmarkService.doBookmarkUseRedisson(member5.getId(),review.getId());
 
         bookmarkService.cancelBookmark(member2.getId(),review.getId());
         bookmarkService.cancelBookmark(member5.getId(),review.getId());

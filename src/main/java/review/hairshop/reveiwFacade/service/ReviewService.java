@@ -37,16 +37,16 @@ public class ReviewService {
     @Transactional
     public ReviewResponseDto registerReview(Long memberId, ReviewParamDto reviewParamDto) {
 
-        Member member = getMember(memberId);
-
-        Review review = createReview(reviewParamDto, member);
-        reviewRepository.save(review);
-
         /**
          * 이미지 형식이 올바른지 확인
          * */
-        if (!filesUtil.isCorrectFormImage(reviewParamDto.getImageFiles()))
+        if (!filesUtil.isCorrectFormImageList(reviewParamDto.getImageFiles()))
             throw new ApiException(ApiResponseStatus.WRONG_IMAGE, "이미지 형식이 올바르지 않습니다");
+
+        Member member = getMember(memberId);
+        Review review = createReview(reviewParamDto, member);
+        reviewRepository.save(review);
+
 
         /**
          * 리뷰 이미지가 없다면 디폴트 이미지 넣어주고 바로 reponse로 넘겨주기
@@ -60,6 +60,7 @@ public class ReviewService {
         /** 2_2.그렇지 않고 함께 등록할 이미지가 하나 이상 존재하면   <항상 DB먼저 수행 후 - File 작업을 수행해야 함>
          * -> 각 이미지들을 저장할 경로를 가진 ReviewImage 엔티티들을 DB에 save한 후 -> 실제 그 경로에 각 사진을 저장한다. */
         List<String> createdImagePath = filesUtil.createImagePath(review.getId(), reviewParamDto.getImageFiles());
+
         List<ReviewImage> reviewImageList = createdImagePath.stream()
                 .map(i -> ReviewImage.builder().review(review).status(ACTIVE).url(i).build())
                 .collect(Collectors.toList());
@@ -71,7 +72,9 @@ public class ReviewService {
 
         /**s3에 저장: aws위치+새로만든 이미지 경로 **/
         filesUtil.putImageInS3(createdImagePath, reviewParamDto.getImageFiles());
+
         List<String> awsImagePath=filesUtil.getImageUrlList(createdImagePath);
+
         return createReveiewResponse(member, review, awsImagePath);
     }
 
@@ -96,8 +99,8 @@ public class ReviewService {
 
     public ReviewResponseDto getReviewDetails(Long loginedMemberId,Long reviewId) {
 
-        Review review=getReview(reviewId);
-        Member member=getMember(loginedMemberId);
+        Review review = getReview(reviewId);
+        Member member = getMember(loginedMemberId);
 
         List<ReviewImage> reviewImageList=review.getReviewImageList();
 
@@ -147,7 +150,8 @@ public class ReviewService {
                 .content(review.getContent())
                 .bookmarkCount(review.getBookmarkCount())
                 .build();
-    }
+    }//lengthStatus는 리뷰에만 있는 걸로
+    //곱슬 머리는 리뷰에도 멤버에도
 
     /**
      * cut, perm, dyeing, straightening이 DTO로 들어올때부터 기본이 NONE으로 받는다고 가정

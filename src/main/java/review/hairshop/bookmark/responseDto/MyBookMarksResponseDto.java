@@ -1,22 +1,16 @@
-package review.hairshop.reveiwFacade.dto;
+package review.hairshop.bookmark.responseDto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import review.hairshop.common.enums.Dyeing;
 import review.hairshop.common.enums.Hair_Cut;
 import review.hairshop.common.enums.Perm;
 import review.hairshop.common.enums.Straightening;
 
-import java.util.List;
-
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
-public class ReviewMyListInfoDto {
-//사진 하나를 어떤걸로??
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class MyBookMarksResponseDto {
     private String shopImg;
     //리뷰 id
     private Long reviewId;
