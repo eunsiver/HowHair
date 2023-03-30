@@ -1,6 +1,7 @@
 package review.hairshop.reveiwFacade.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -9,8 +10,8 @@ import review.hairshop.common.response.ApiResponseStatus;
 import review.hairshop.common.utils.FilesUtil;
 import review.hairshop.member.Member;
 import review.hairshop.member.repository.MemberRepository;
-import review.hairshop.reveiwFacade.dto.ReviewMyListInfoDto;
-import review.hairshop.reveiwFacade.dto.responseDto.ReviewResponseDto;
+import review.hairshop.reveiwFacade.dto.responseDto.MyReviewListResponseDto;
+import review.hairshop.reveiwFacade.dto.responseDto.ReviewDetailResponseDto;
 import review.hairshop.reveiwFacade.review_image.ReviewImage;
 import review.hairshop.reveiwFacade.review_image.repository.ReviewImageRepository;
 import review.hairshop.reveiwFacade.review.Review;
@@ -36,7 +37,7 @@ public class ReviewService {
 
     //리뷰에다 저장
     @Transactional
-    public ReviewResponseDto registerReview(Long memberId, ReviewParamDto reviewParamDto) {
+    public ReviewDetailResponseDto registerReview(Long memberId, ReviewParamDto reviewParamDto) {
 
         /**
          * 이미지 형식이 올바른지 확인
@@ -98,7 +99,7 @@ public class ReviewService {
         review.changeStatus(INACTIVE);
     }
 
-    public ReviewResponseDto getReviewDetails(Long loginedMemberId,Long reviewId) {
+    public ReviewDetailResponseDto getReviewDetail(Long loginedMemberId, Long reviewId) {
 
         Review review = getReview(reviewId);
         Member member = getMember(loginedMemberId);
@@ -118,9 +119,34 @@ public class ReviewService {
 
         return createReveiewResponse(member,review,reviewImgPaths);
     }
+    public List<MyReviewListResponseDto> getMyReviewList(Long memberId) {
 
-    public ReviewMyListInfoDto createMyReviewListInfoDto(Review review){
-        return ReviewMyListInfoDto.builder()
+        if(!reviewRepository.existsByMemberIdAndStatus(memberId, ACTIVE)){
+            return List.of();
+        }
+        List<Review> reviewList = reviewRepository.findAllByMemberIdAndStatus(memberId, ACTIVE);
+
+        return reviewList.stream()
+                .map(this::createMyReviewListInfoDto)
+                .collect(Collectors.toList());
+    }
+
+    public MyReviewListResponseDto createMyReviewListInfoDto(Review review){
+
+        String imagePath;
+
+        if(!reviewImageRepository.existsByReviewIdAndStatus(review.getId(),ACTIVE))
+            imagePath=filesUtil.getSampleUrlList().get(0);
+
+        else
+        {
+            ReviewImage reviewImage=reviewImageRepository.findFirstByReviewIdAndStatus(review.getId(),ACTIVE)
+                    .orElseThrow(()->new ApiException(ApiResponseStatus.NOT_FOUND,"해당 리뷰에 이미지가 없습니다."));
+            imagePath=filesUtil.getImageUrlList(List.of(reviewImage.getUrl())).get(0);
+        }
+
+        return MyReviewListResponseDto.builder()
+                .shopImg(imagePath)
                 .shopName(review.getHairShopName())
                 .price(review.getPrice())
                 .reviewId(review.getId())
@@ -131,8 +157,8 @@ public class ReviewService {
                 .build();
     }
 
-    public ReviewResponseDto createReveiewResponse(Member member, Review review, List<String> imageUrl) {
-        return ReviewResponseDto.builder()
+    public ReviewDetailResponseDto createReveiewResponse(Member member, Review review, List<String> imageUrl) {
+        return ReviewDetailResponseDto.builder()
                 .reviewId(review.getId())
                 .isReaderSameWriter(member.getId().equals(review.getMember().getId()) ? SAME : DIFF)
                 .shopName(review.getHairShopName())

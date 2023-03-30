@@ -13,9 +13,13 @@ import java.util.Optional;
 @Repository
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     boolean existsByMemberAndReview(Member member, Review review);
-    Optional<Bookmark> findByMemberAndReview(Member member, Review review);
+    Optional<Bookmark> findByMemberIdAndReviewId(Long memberId, Long reviewId);
 
     List<Bookmark> findByMemberAndStatus(Member member, Status status);
 
     int countByReviewIdAndStatus(Long ReviewId, Status active);
+
+    boolean existsByMemberAndStatus(Member member, Status active);
+
+    boolean existsByMemberIdAndReviewId(Long memberId, Long reviewId);
 }

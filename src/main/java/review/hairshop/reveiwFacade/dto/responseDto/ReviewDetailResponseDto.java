@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import review.hairshop.common.enums.*;
 
-import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ReviewResponseDto {
+public class ReviewDetailResponseDto {
     //북마크 수
     private int bookmarkCount;
     private Long reviewId;

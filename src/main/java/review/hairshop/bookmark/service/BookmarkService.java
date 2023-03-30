@@ -8,12 +8,16 @@ import review.hairshop.bookmark.repository.BookmarkRepository;
 import review.hairshop.bookmark.responseDto.MyBookMarksResponseDto;
 import review.hairshop.common.response.ApiException;
 import review.hairshop.common.response.ApiResponseStatus;
+import review.hairshop.common.utils.FilesUtil;
 import review.hairshop.member.Member;
 import review.hairshop.member.repository.MemberRepository;
 import review.hairshop.reveiwFacade.review.Review;
 import review.hairshop.reveiwFacade.review.repository.ReviewRepository;
+import review.hairshop.reveiwFacade.review_image.ReviewImage;
+import review.hairshop.reveiwFacade.review_image.repository.ReviewImageRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static review.hairshop.common.enums.Status.ACTIVE;
@@ -26,78 +30,78 @@ public class BookmarkService {
 
     private final MemberRepository memberRepository;
     private final ReviewRepository reviewRepository;
+    private final ReviewImageRepository reviewImageRepository;
     private final BookmarkRepository bookmarkRepository;
+
+    private final FilesUtil filesUtil;
 
     @Transactional
     public void doOnOffBookmark(Long memberId, Long reviewId) {
 
 
-        Member member = getMember(memberId);
-        Review review = getReview(reviewId);
+        Optional<Bookmark> byMemberIdAndReviewId = bookmarkRepository.findByMemberIdAndReviewId(memberId, reviewId);
 
-        //북마크를 한 기록이 있음(북마크 리스트에 존재함)
-        if(hasBookmarkRecord(member, review)){
+        byMemberIdAndReviewId.ifPresentOrElse(
 
-            Bookmark bookmark=bookmarkRepository.findByMemberAndReview(member,review).orElseThrow(
-                    ()->{
-                        throw new ApiException(ApiResponseStatus.INVALID_BOOKMARK, "존재하지 않는 북마크입니다.");
-                    }
-            );
-            //북마크 O->X
-            if(bookmark.getStatus().equals(ACTIVE))
-            {
-                bookmark.changeStatus(INACTIVE);
+                Bookmark -> {
+                    if (byMemberIdAndReviewId.get().getStatus().equals(ACTIVE)) byMemberIdAndReviewId.get().changeStatus(INACTIVE);
 
-            }
-            //북마크 X->O
-            else {
-                bookmark.changeStatus(ACTIVE);
-            }
-        }
-        //북마크를 한 기록이 없음(북마크 리스트에 존재하지 않음)
-        else {
-            bookmarkRepository.save(Bookmark.builder().status(ACTIVE).member(member).review(review).build());
-        }
+                    else byMemberIdAndReviewId.get().changeStatus(ACTIVE);
+                },
+                    () -> {
+
+                    Member member = getMember(memberId);
+                    Review review = getReview(reviewId);
+                    bookmarkRepository.save(Bookmark.builder().status(ACTIVE).member(member).review(review).build());
+
+                });
     }
 
 
-//    public List<MyBookMarksResponseDto> getMyBookmarkList(Long memberId) {
-//        Member member=getMember(memberId);
-//        //review review=getReview(reviewId);
-//
-//        //북마크가 하나도 없을시
-//        if(hasBookmarkRecord(member,review)){
-//            //어떻게 return 해야 할까요??
-//        }
-//        //북마크가 존재할 시
-//        List<Bookmark> bookmarkList=bookmarkRepository.findByMemberAndActive(member,ACTIVE);
-//
-//        return createMyBookMarksResponseDto(bookmarkList);
-//    }
+    public List<MyBookMarksResponseDto> getMyBookmarkList(Long memberId) {
 
-    private List<MyBookMarksResponseDto> createMyBookMarksResponseDto(List<Bookmark> bookmarkList) {
+        Member member = getMember(memberId);
+
+        //member와 Active 상태인 북마크가 없으면 List<MyBookMarksResponseDto>에 빈 리스트를 리턴해준다.
+        if (!bookmarkRepository.existsByMemberAndStatus(member, ACTIVE)) {
+            return List.of();
+        }
+        //member와 Active 상태인 북마크가 있으면 List<MyBookMarksResponseDto>에 북마크 리스트를 리턴해준다.
+        List<Bookmark> bookmarkList = bookmarkRepository.findByMemberAndStatus(member, ACTIVE);
 
         return bookmarkList.stream()
-                .map(i->MyBookMarksResponseDto.builder()
-                        .shopImg("샵 이미지 사진 무엇으로 해야할까요?")
-                        .price(i.getReview().getPrice())
-                        .shopName(i.getReview().getHairShopName())
-                        .straightening(i.getReview().getStraightening())
-                        .perm(i.getReview().getPerm())
-                        .dyeing(i.getReview().getDyeing())
-                        .hairCut(i.getReview().getHairCut())
-                        .reviewId(i.getReview().getId())
-                        .build())
+                .map(this::createMyBookMarksResponseDto)
                 .collect(Collectors.toList());
     }
 
-    private boolean hasBookmarkRecord(Member member, Review review){
-        
-        return bookmarkRepository.existsByMemberAndReview(member,review);
+    private MyBookMarksResponseDto createMyBookMarksResponseDto(Bookmark bookmark) {
+
+        String imagePath;
+        Review review = bookmark.getReview();
+
+        if (!reviewImageRepository.existsByReviewIdAndStatus(review.getId(), ACTIVE))
+            imagePath = filesUtil.getSampleUrlList().get(0);
+
+        else {
+            ReviewImage reviewImage = reviewImageRepository.findFirstByReviewIdAndStatus(review.getId(), ACTIVE)
+                    .orElseThrow(() -> new ApiException(ApiResponseStatus.NOT_FOUND, "해당 리뷰에 이미지가 없습니다."));
+            imagePath = filesUtil.getImageUrlList(List.of(reviewImage.getUrl())).get(0);
+        }
+
+        return MyBookMarksResponseDto.builder()
+                .shopImg(imagePath)
+                .price(bookmark.getReview().getPrice())
+                .shopName(bookmark.getReview().getHairShopName())
+                .straightening(bookmark.getReview().getStraightening())
+                .perm(bookmark.getReview().getPerm())
+                .dyeing(bookmark.getReview().getDyeing())
+                .hairCut(bookmark.getReview().getHairCut())
+                .reviewId(bookmark.getReview().getId())
+                .build();
     }
 
     private Member getMember(Long memberId) {
-        
+
         Member findMember = memberRepository.findByIdAndStatus(memberId, ACTIVE).orElseThrow(
                 () -> {
                     throw new ApiException(ApiResponseStatus.INVALID_MEMBER, "유효하지 않은 Member Id로 Member를 조회하려고 했습니다.");
@@ -107,7 +111,7 @@ public class BookmarkService {
     }
 
     private Review getReview(Long reviewId) {
-        
+
         Review findReview = reviewRepository.findByIdAndStatus(reviewId, ACTIVE).orElseThrow(
                 () -> {
                     throw new ApiException(ApiResponseStatus.INVALID_REVIEW, "존재하지 않는 리뷰입니다.");
@@ -115,4 +119,6 @@ public class BookmarkService {
         );
         return findReview;
     }
+
+
 }

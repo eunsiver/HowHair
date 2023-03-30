@@ -1,6 +1,7 @@
 package review.hairshop.reveiwFacade.review_image;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import review.hairshop.common.BasicEntity;
 import review.hairshop.common.enums.Status;
