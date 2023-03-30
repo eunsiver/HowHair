@@ -1,5 +1,6 @@
 package review.hairshop.bookmark;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import review.hairshop.common.enums.Status;
 import review.hairshop.member.Member;

@@ -1,5 +1,6 @@
 package review.hairshop.reveiwFacade.review;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import review.hairshop.bookmark.Bookmark;
 import review.hairshop.common.BasicEntity;
