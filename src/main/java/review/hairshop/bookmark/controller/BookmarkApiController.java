@@ -2,8 +2,8 @@ package review.hairshop.bookmark.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import review.hairshop.bookmark.responseDto.BookmarkResponseMessageDto;
-import review.hairshop.bookmark.responseDto.MyBookMarksResponseDto;
+import review.hairshop.bookmark.dto.responseDto.BookmarkResponseMessageDto;
+import review.hairshop.bookmark.dto.responseDto.MyBookMarksResponseDto;
 import review.hairshop.bookmark.service.BookmarkService;
 import review.hairshop.common.response.ApiResponse;
 
