@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import review.hairshop.bookmark.Bookmark;
 import review.hairshop.bookmark.repository.BookmarkRepository;
 import review.hairshop.bookmark.responseDto.MyBookMarksResponseDto;
+import review.hairshop.common.enums.Status;
 import review.hairshop.common.response.ApiException;
 import review.hairshop.common.response.ApiResponseStatus;
 import review.hairshop.common.utils.FilesUtil;
@@ -32,7 +33,6 @@ public class BookmarkService {
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
     private final BookmarkRepository bookmarkRepository;
-
     private final FilesUtil filesUtil;
 
     @Transactional
@@ -44,30 +44,35 @@ public class BookmarkService {
         byMemberIdAndReviewId.ifPresentOrElse(
 
                 Bookmark -> {
-                    if (byMemberIdAndReviewId.get().getStatus().equals(ACTIVE)) byMemberIdAndReviewId.get().changeStatus(INACTIVE);
 
-                    else byMemberIdAndReviewId.get().changeStatus(ACTIVE);
+                    if (byMemberIdAndReviewId.get().getStatus().equals(ACTIVE))
+                        changeBookmarkStatus(byMemberIdAndReviewId,INACTIVE);
+
+                    else changeBookmarkStatus(byMemberIdAndReviewId,ACTIVE);
                 },
-                    () -> {
-
-                    Member member = getMember(memberId);
-                    Review review = getReview(reviewId);
-                    bookmarkRepository.save(Bookmark.builder().status(ACTIVE).member(member).review(review).build());
-
+                () -> {
+                    saveNewBookmark(memberId, reviewId);
                 });
     }
 
+    private void changeBookmarkStatus(Optional<Bookmark> byMemberIdAndReviewId, Status active) {
+
+        byMemberIdAndReviewId.get().changeStatus(active);
+    }
+
+    private void saveNewBookmark(Long memberId, Long reviewId) {
+
+        Member member = getMember(memberId);
+        Review review = getReview(reviewId);
+        bookmarkRepository.save(Bookmark.builder().status(ACTIVE).member(member).review(review).build());
+    }
 
     public List<MyBookMarksResponseDto> getMyBookmarkList(Long memberId) {
 
-        Member member = getMember(memberId);
+        List<Bookmark> bookmarkList = bookmarkRepository.findByMemberIdAndStatus(memberId, ACTIVE);
 
-        //member와 Active 상태인 북마크가 없으면 List<MyBookMarksResponseDto>에 빈 리스트를 리턴해준다.
-        if (!bookmarkRepository.existsByMemberAndStatus(member, ACTIVE)) {
+        if (bookmarkList.isEmpty())
             return List.of();
-        }
-        //member와 Active 상태인 북마크가 있으면 List<MyBookMarksResponseDto>에 북마크 리스트를 리턴해준다.
-        List<Bookmark> bookmarkList = bookmarkRepository.findByMemberAndStatus(member, ACTIVE);
 
         return bookmarkList.stream()
                 .map(this::createMyBookMarksResponseDto)
@@ -76,6 +81,19 @@ public class BookmarkService {
 
     private MyBookMarksResponseDto createMyBookMarksResponseDto(Bookmark bookmark) {
 
+        return MyBookMarksResponseDto.builder()
+                .shopImg(getImagePath(bookmark))
+                .price(bookmark.getReview().getPrice())
+                .shopName(bookmark.getReview().getHairShopName())
+                .straightening(bookmark.getReview().getStraightening())
+                .perm(bookmark.getReview().getPerm())
+                .dyeing(bookmark.getReview().getDyeing())
+                .hairCut(bookmark.getReview().getHairCut())
+                .reviewId(bookmark.getReview().getId())
+                .build();
+    }
+
+    private String getImagePath(Bookmark bookmark) {
         String imagePath;
         Review review = bookmark.getReview();
 
@@ -85,19 +103,11 @@ public class BookmarkService {
         else {
             ReviewImage reviewImage = reviewImageRepository.findFirstByReviewIdAndStatus(review.getId(), ACTIVE)
                     .orElseThrow(() -> new ApiException(ApiResponseStatus.NOT_FOUND, "해당 리뷰에 이미지가 없습니다."));
+
             imagePath = filesUtil.getImageUrlList(List.of(reviewImage.getUrl())).get(0);
         }
 
-        return MyBookMarksResponseDto.builder()
-                .shopImg(imagePath)
-                .price(bookmark.getReview().getPrice())
-                .shopName(bookmark.getReview().getHairShopName())
-                .straightening(bookmark.getReview().getStraightening())
-                .perm(bookmark.getReview().getPerm())
-                .dyeing(bookmark.getReview().getDyeing())
-                .hairCut(bookmark.getReview().getHairCut())
-                .reviewId(bookmark.getReview().getId())
-                .build();
+        return imagePath;
     }
 
     private Member getMember(Long memberId) {
