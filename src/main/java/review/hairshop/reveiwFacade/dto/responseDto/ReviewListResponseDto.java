@@ -10,7 +10,7 @@ import review.hairshop.common.enums.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class MyReviewListResponseDto {
+public class ReviewListResponseDto {
 
     private String shopImg;
     private Long reviewId;
@@ -20,4 +20,5 @@ public class MyReviewListResponseDto {
     private Straightening straightening;
     private Hair_Cut hairCut;
     private Long price;
+    private Status bookmarkStatus;
 }

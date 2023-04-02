@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import review.hairshop.bookmark.Bookmark;
 import review.hairshop.bookmark.repository.BookmarkRepository;
 import review.hairshop.common.enums.Status;
 import review.hairshop.common.enums.isReaderSameWriter;
@@ -13,7 +12,8 @@ import review.hairshop.common.response.ApiResponseStatus;
 import review.hairshop.common.utils.FilesUtil;
 import review.hairshop.member.Member;
 import review.hairshop.member.repository.MemberRepository;
-import review.hairshop.reveiwFacade.dto.responseDto.MyReviewListResponseDto;
+import review.hairshop.reveiwFacade.dto.HairShopDto;
+import review.hairshop.reveiwFacade.dto.responseDto.ReviewListResponseDto;
 import review.hairshop.reveiwFacade.dto.responseDto.ReviewDetailResponseDto;
 import review.hairshop.reveiwFacade.review_image.ReviewImage;
 import review.hairshop.reveiwFacade.review_image.repository.ReviewImageRepository;
@@ -22,7 +22,6 @@ import review.hairshop.reveiwFacade.dto.ReviewParamDto;
 import review.hairshop.reveiwFacade.review.repository.ReviewRepository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static review.hairshop.common.enums.Status.*;
@@ -39,6 +38,7 @@ public class ReviewService {
     private final BookmarkRepository bookmarkRepository;
     private final FilesUtil filesUtil;
     private final ReviewImageRepository reviewImageRepository;
+
 
     @Transactional
     public ReviewDetailResponseDto registerReview(Long memberId, ReviewParamDto reviewParamDto) {
@@ -77,7 +77,7 @@ public class ReviewService {
 
         Review review = getReview(reviewId);
 
-        if (hasAuthorityToDelete(memberId,review)) {
+        if (hasAuthorityToDelete(memberId, review)) {
             throw new ApiException(ApiResponseStatus.NOT_AUTHORIZED, "작성자가 아니므로 현 게시물을 삭제할 수 없습니다.");
         }
         review.changeStatus(INACTIVE);
@@ -101,28 +101,43 @@ public class ReviewService {
         return createReveiewResponse(member, review, reviewImgPaths);
     }
 
-    public List<MyReviewListResponseDto> getMyReviewList(Long memberId) {
+    public List<ReviewListResponseDto> getMyReviewList(Long memberId) {
 
-        if (!reviewRepository.existsByMemberIdAndStatus(memberId, ACTIVE)) {
+        List<Review> reviewList = reviewRepository.findAllByMemberIdAndStatus(memberId, ACTIVE);
+
+        return returnReviewList(memberId, reviewList);
+    }
+
+    public List<ReviewListResponseDto> getHairShopReviewList(Long memberId, String shopName) {
+
+        List<Review> reviewList = reviewRepository.findAllByHairShopNameAndStatus(shopName, ACTIVE);
+
+        return returnReviewList(memberId, reviewList);
+    }
+
+    private List<ReviewListResponseDto> returnReviewList(Long memberId, List<Review> reviewList) {
+
+        Member member = getMember(memberId);
+
+        if (CollectionUtils.isEmpty(reviewList)) {
             return List.of();
         }
-        List<Review> reviewList = reviewRepository.findAllByMemberIdAndStatus(memberId, ACTIVE);
 
         return reviewList
                 .stream()
-                .map(review -> createMyReviewListInfoDto(review))
+                .map(review -> createReviewListInfo(member, review))
                 .collect(Collectors.toList());
     }
 
-    private boolean hasAuthorityToDelete(Long memberId, Review review){
+    private boolean hasAuthorityToDelete(Long memberId, Review review) {
 
-        if(memberId.equals(review.getMember().getId()))
+        if (memberId.equals(review.getMember().getId()))
             return true;
 
         return false;
     }
 
-    private MyReviewListResponseDto createMyReviewListInfoDto(Review review) {
+    private ReviewListResponseDto createReviewListInfo(Member member, Review review) {
 
         String imagePath;
 
@@ -136,12 +151,12 @@ public class ReviewService {
             imagePath = filesUtil.getImageUrlList(List.of(reviewImage.getPath())).get(0);
         }
 
-        return createMyReviewListResponse(review,imagePath);
+        return createReviewListResponse(member, review, imagePath);
     }
 
-    private MyReviewListResponseDto createMyReviewListResponse(Review review, String imagePath){
+    private ReviewListResponseDto createReviewListResponse(Member member, Review review, String imagePath) {
 
-        return MyReviewListResponseDto.builder()
+        return ReviewListResponseDto.builder()
                 .shopImg(imagePath)
                 .shopName(review.getHairShopName())
                 .price(review.getPrice())
@@ -150,6 +165,7 @@ public class ReviewService {
                 .dyeing(review.getDyeing())
                 .hairCut(review.getHairCut())
                 .perm(review.getPerm())
+                .bookmarkStatus(didIBookmark(member, review))
                 .build();
     }
 
@@ -157,12 +173,13 @@ public class ReviewService {
 
         return ReviewDetailResponseDto.builder()
                 .reviewId(review.getId())
-                .isReaderSameWriter(checkReaderEqualWriter(member,review))
+                .isReaderSameWriter(checkReaderEqualWriter(member, review))
                 .shopName(review.getHairShopName())
                 .imageUrls(imageUrl)
                 .satisfaction(review.getSatisfaction())
                 .memberName(member.getName())
                 .gender(member.getGender())
+                .curlyStatus(member.getCurlyStatus())
                 .date(review.getDate())
                 .designer(review.getDesignerName())
                 .createAt(review.getCreatedAt())
@@ -172,29 +189,29 @@ public class ReviewService {
                 .price(review.getPrice())
                 .content(review.getContent())
                 .bookmarkCount(getBookmarkCount(review))
-                .bookmarkStatus(didIBookmark(member,review))
+                .bookmarkStatus(didIBookmark(member, review))
                 .build();
     }
 
-    private Status didIBookmark(Member member,Review review) {
+    private Status didIBookmark(Member member, Review review) {
 
         boolean isBookmarkActive = bookmarkRepository.findByMemberIdAndReviewIdAndStatus(member.getId(), review.getId(), ACTIVE)
                 .isPresent();
 
-        if(isBookmarkActive)return ACTIVE;
+        if (isBookmarkActive) return ACTIVE;
 
         return INACTIVE;
     }
 
-    private int getBookmarkCount(Review review){
+    private int getBookmarkCount(Review review) {
 
-        if(CollectionUtils.isEmpty(review.getBookmarkList()))
+        if (CollectionUtils.isEmpty(review.getBookmarkList()))
             return 0;
 
         return review.getBookmarkList().size();
     }
 
-    private isReaderSameWriter checkReaderEqualWriter(Member member,Review review){
+    private isReaderSameWriter checkReaderEqualWriter(Member member, Review review) {
 
         if (member.getId().equals(review.getMember().getId()))
             return SAME;
@@ -239,4 +256,16 @@ public class ReviewService {
 
         return findReview;
     }
+
+    public List<HairShopDto> orderShopByReviewCount() {
+        //헤어샵을 분리했었어야 한다는 생각
+        return reviewRepository.OrderShopByReviewCount();
+    }
+
+
+//    public Object orderReviewByBookmarkCount() {
+//
+//        PageRequest pageRequest = PageRequest.of(0, 10, Sort.by("bookmarkCount").descending());
+//    }
 }
+//https://techblog.woowahan.com/2709/

@@ -34,13 +34,6 @@ public class Review extends BasicEntity{
     @Enumerated(EnumType.STRING)
     private LengthStatus lengthStatus;
 
-
-    /**
-     * 리뷰에 직접 입력되는 것이 업는데,
-     * 나중에 join으로 회원에서 가져다 쓰는 것이 맞을지
-     * 이렇게 리뷰에 박아버리는 것이 맞는지 궁금..
-     * 일단은 없애고 해보는 식으로
-     * */
 //    @Enumerated(EnumType.STRING)
 //    private CurlyStatus curlyStatus;
 

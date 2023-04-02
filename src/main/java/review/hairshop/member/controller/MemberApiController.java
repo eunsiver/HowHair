@@ -115,10 +115,4 @@ public class MemberApiController {
 
         return ApiResponse.success(memberService.updateMyPage(memberId, myPageParameterDto));
     }
-
-
-
-
-
-
 }

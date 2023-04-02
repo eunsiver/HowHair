@@ -31,6 +31,7 @@ public class ReviewDetailResponseDto {
     private Perm perm;
     private Dyeing dyeing;
     private LengthStatus lengthStatus;
+    private CurlyStatus curlyStatus;
     private Long price;
     private String content;
     private int bookmarkCount;
