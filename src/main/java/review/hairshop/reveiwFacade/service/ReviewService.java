@@ -1,22 +1,26 @@
 package review.hairshop.reveiwFacade.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import review.hairshop.bookmark.repository.BookmarkRepository;
+import review.hairshop.common.enums.Status;
+import review.hairshop.common.enums.isReaderSameWriter;
 import review.hairshop.common.response.ApiException;
 import review.hairshop.common.response.ApiResponseStatus;
 import review.hairshop.common.utils.FilesUtil;
 import review.hairshop.member.Member;
 import review.hairshop.member.repository.MemberRepository;
-import review.hairshop.reveiwFacade.dto.responseDto.MyReviewListResponseDto;
+import review.hairshop.reveiwFacade.dto.HairShopDto;
+import review.hairshop.reveiwFacade.dto.responseDto.ReviewListResponseDto;
 import review.hairshop.reveiwFacade.dto.responseDto.ReviewDetailResponseDto;
 import review.hairshop.reveiwFacade.review_image.ReviewImage;
 import review.hairshop.reveiwFacade.review_image.repository.ReviewImageRepository;
 import review.hairshop.reveiwFacade.review.Review;
 import review.hairshop.reveiwFacade.dto.ReviewParamDto;
 import review.hairshop.reveiwFacade.review.repository.ReviewRepository;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,30 +35,24 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final MemberRepository memberRepository;
+    private final BookmarkRepository bookmarkRepository;
     private final FilesUtil filesUtil;
     private final ReviewImageRepository reviewImageRepository;
 
 
-    //리뷰에다 저장
     @Transactional
     public ReviewDetailResponseDto registerReview(Long memberId, ReviewParamDto reviewParamDto) {
 
-        /**
-         * 이미지 형식이 올바른지 확인
-         * */
         if (!filesUtil.isCorrectFormImageList(reviewParamDto.getImageFiles()))
             throw new ApiException(ApiResponseStatus.WRONG_IMAGE, "이미지 형식이 올바르지 않습니다");
 
         Member member = getMember(memberId);
         Review review = createReview(reviewParamDto, member);
+
         reviewRepository.save(review);
 
-
-        /**
-         * 리뷰 이미지가 없다면 디폴트 이미지 넣어주고 바로 reponse로 넘겨주기
-         * Entity들을 먼저 save한 후 파일들을 저장
-         * **/
         if (reviewParamDto.getImageFiles().isEmpty()) {
+
             List<String> sampleImagePath = filesUtil.getSampleUrlList();
             return createReveiewResponse(member, review, sampleImagePath);
         }
@@ -62,40 +60,26 @@ public class ReviewService {
         /** 2_2.그렇지 않고 함께 등록할 이미지가 하나 이상 존재하면   <항상 DB먼저 수행 후 - File 작업을 수행해야 함>
          * -> 각 이미지들을 저장할 경로를 가진 ReviewImage 엔티티들을 DB에 save한 후 -> 실제 그 경로에 각 사진을 저장한다. */
         List<String> createdImagePath = filesUtil.createImagePath(review.getId(), reviewParamDto.getImageFiles());
-
         List<ReviewImage> reviewImageList = createdImagePath.stream()
-                .map(i -> ReviewImage.builder().review(review).status(ACTIVE).url(i).build())
+                .map(i -> ReviewImage.builder().review(review).status(ACTIVE).path(i).build())
                 .collect(Collectors.toList());
-        /**
-         * 이미지 엔티티에 저장
-         * 각각 save하는 것보다, saveAll 하는게 트랜잭션 상 성능이 더 좋음
-         * */
+
         reviewImageRepository.saveAll(reviewImageList);
 
-        /**s3에 저장: aws위치+새로만든 이미지 경로 **/
         filesUtil.putImageInS3(createdImagePath, reviewParamDto.getImageFiles());
-
-        List<String> awsImagePath=filesUtil.getImageUrlList(createdImagePath);
+        List<String> awsImagePath = filesUtil.getImageUrlList(createdImagePath);
 
         return createReveiewResponse(member, review, awsImagePath);
     }
 
-    /**
-     * 리뷰 삭제
-     * delete하는 것이 아니라 Status를 active->inactive로 변경, 이미지들도 inactive로 변경
-     * 프론트에서 게시글 번호를 전달 받음 -> 리뷰를 작성한 자와 현재 로그인한 자가 같은지 확인하여 INACTIVE
-     * 해당 유저가 리뷰이미지를 하나도 안 올릴 수 있음을 유의!
-     **/
     @Transactional
     public void withdrawReview(Long reviewId, Long memberId) {
-        //리뷰를 가지고 옴
-        Review review=getReview(reviewId);
 
-        //리뷰를 삭제할 권한이 있는지 확인
-        if(!memberId.equals(review.getMember().getId())) {
+        Review review = getReview(reviewId);
+
+        if (hasAuthorityToDelete(memberId, review)) {
             throw new ApiException(ApiResponseStatus.NOT_AUTHORIZED, "작성자가 아니므로 현 게시물을 삭제할 수 없습니다.");
         }
-        //리뷰를 INACTIVE로 하면 리뷰이미지는 종속적인 관계로 불러올 수 없음. 따라서 리뷰이미지는 굳이 INACTIVE 시키지 않음.
         review.changeStatus(INACTIVE);
     }
 
@@ -104,48 +88,75 @@ public class ReviewService {
         Review review = getReview(reviewId);
         Member member = getMember(loginedMemberId);
 
-        List<ReviewImage> reviewImageList=review.getReviewImageList();
+        List<ReviewImage> reviewImageList = review.getReviewImageList();
 
-        if(reviewImageList.isEmpty()){
-            List<String> reviewSampleImgPaths=filesUtil.getSampleUrlList();
-            return createReveiewResponse(member,review,reviewSampleImgPaths);
+        if (reviewImageList.isEmpty()) {
+            List<String> reviewSampleImgPaths = filesUtil.getSampleUrlList();
+            return createReveiewResponse(member, review, reviewSampleImgPaths);
         }
 
-        List<String> reviewPath=reviewImageList.stream()
-                .map(i->i.getUrl())
-                .collect(Collectors.toList());
+        List<String> reviewPath = reviewImageList.stream().map(i -> i.getPath()).collect(Collectors.toList());
+        List<String> reviewImgPaths = filesUtil.getImageUrlList(reviewPath);
 
-        List<String> reviewImgPaths=filesUtil.getImageUrlList(reviewPath);
-
-        return createReveiewResponse(member,review,reviewImgPaths);
+        return createReveiewResponse(member, review, reviewImgPaths);
     }
-    public List<MyReviewListResponseDto> getMyReviewList(Long memberId) {
 
-        if(!reviewRepository.existsByMemberIdAndStatus(memberId, ACTIVE)){
-            return List.of();
-        }
+    public List<ReviewListResponseDto> getMyReviewList(Long memberId) {
+
         List<Review> reviewList = reviewRepository.findAllByMemberIdAndStatus(memberId, ACTIVE);
 
-        return reviewList.stream()
-                .map(this::createMyReviewListInfoDto)
+        return returnReviewList(memberId, reviewList);
+    }
+
+    public List<ReviewListResponseDto> getHairShopReviewList(Long memberId, String shopName) {
+
+        List<Review> reviewList = reviewRepository.findAllByHairShopNameAndStatus(shopName, ACTIVE);
+
+        return returnReviewList(memberId, reviewList);
+    }
+
+    private List<ReviewListResponseDto> returnReviewList(Long memberId, List<Review> reviewList) {
+
+        Member member = getMember(memberId);
+
+        if (CollectionUtils.isEmpty(reviewList)) {
+            return List.of();
+        }
+
+        return reviewList
+                .stream()
+                .map(review -> createReviewListInfo(member, review))
                 .collect(Collectors.toList());
     }
 
-    public MyReviewListResponseDto createMyReviewListInfoDto(Review review){
+    private boolean hasAuthorityToDelete(Long memberId, Review review) {
+
+        if (memberId.equals(review.getMember().getId()))
+            return true;
+
+        return false;
+    }
+
+    private ReviewListResponseDto createReviewListInfo(Member member, Review review) {
 
         String imagePath;
 
-        if(!reviewImageRepository.existsByReviewIdAndStatus(review.getId(),ACTIVE))
-            imagePath=filesUtil.getSampleUrlList().get(0);
+        if (!reviewImageRepository.existsByReviewIdAndStatus(review.getId(), ACTIVE))
+            imagePath = filesUtil.getSampleUrlList().get(0);
 
-        else
-        {
-            ReviewImage reviewImage=reviewImageRepository.findFirstByReviewIdAndStatus(review.getId(),ACTIVE)
-                    .orElseThrow(()->new ApiException(ApiResponseStatus.NOT_FOUND,"해당 리뷰에 이미지가 없습니다."));
-            imagePath=filesUtil.getImageUrlList(List.of(reviewImage.getUrl())).get(0);
+        else {
+            ReviewImage reviewImage = reviewImageRepository.findFirstByReviewIdAndStatus(review.getId(), ACTIVE).orElseThrow(() ->
+                    new ApiException(ApiResponseStatus.NOT_FOUND, "해당 리뷰에 이미지가 없습니다."));
+
+            imagePath = filesUtil.getImageUrlList(List.of(reviewImage.getPath())).get(0);
         }
 
-        return MyReviewListResponseDto.builder()
+        return createReviewListResponse(member, review, imagePath);
+    }
+
+    private ReviewListResponseDto createReviewListResponse(Member member, Review review, String imagePath) {
+
+        return ReviewListResponseDto.builder()
                 .shopImg(imagePath)
                 .shopName(review.getHairShopName())
                 .price(review.getPrice())
@@ -154,40 +165,66 @@ public class ReviewService {
                 .dyeing(review.getDyeing())
                 .hairCut(review.getHairCut())
                 .perm(review.getPerm())
+                .bookmarkStatus(didIBookmark(member, review))
                 .build();
     }
 
-    public ReviewDetailResponseDto createReveiewResponse(Member member, Review review, List<String> imageUrl) {
+    private ReviewDetailResponseDto createReveiewResponse(Member member, Review review, List<String> imageUrl) {
+
         return ReviewDetailResponseDto.builder()
                 .reviewId(review.getId())
-                .isReaderSameWriter(member.getId().equals(review.getMember().getId()) ? SAME : DIFF)
+                .isReaderSameWriter(checkReaderEqualWriter(member, review))
                 .shopName(review.getHairShopName())
                 .imageUrls(imageUrl)
                 .satisfaction(review.getSatisfaction())
                 .memberName(member.getName())
                 .gender(member.getGender())
+                .curlyStatus(member.getCurlyStatus())
                 .date(review.getDate())
                 .designer(review.getDesignerName())
                 .createAt(review.getCreatedAt())
-                .hairCut(review.getHairCut())
-                .perm(review.getPerm())
+                .hairCut(review.getHairCut()).perm(review.getPerm())
                 .dyeing(review.getDyeing())
                 .lengthStatus(review.getLengthStatus())
                 .price(review.getPrice())
                 .content(review.getContent())
-                .bookmarkCount(CollectionUtils.isEmpty(review.getBookmarkList())? 0:review.getBookmarkList().size())
+                .bookmarkCount(getBookmarkCount(review))
+                .bookmarkStatus(didIBookmark(member, review))
                 .build();
-    }//lengthStatus는 리뷰에만 있는 걸로
-    //곱슬 머리는 리뷰에도 멤버에도
+    }
 
-    /**
-     * cut, perm, dyeing, straightening이 DTO로 들어올때부터 기본이 NONE으로 받는다고 가정
-     */
+    private Status didIBookmark(Member member, Review review) {
+
+        boolean isBookmarkActive = bookmarkRepository.findByMemberIdAndReviewIdAndStatus(member.getId(), review.getId(), ACTIVE)
+                .isPresent();
+
+        if (isBookmarkActive) return ACTIVE;
+
+        return INACTIVE;
+    }
+
+    private int getBookmarkCount(Review review) {
+
+        if (CollectionUtils.isEmpty(review.getBookmarkList()))
+            return 0;
+
+        return review.getBookmarkList().size();
+    }
+
+    private isReaderSameWriter checkReaderEqualWriter(Member member, Review review) {
+
+        if (member.getId().equals(review.getMember().getId()))
+            return SAME;
+
+        return DIFF;
+    }
+
     private Review createReview(ReviewParamDto reviewParamDto, Member member) {
+
         return Review.builder()
                 .content(reviewParamDto.getContent())
                 .date(reviewParamDto.getDate())
-                .status(ACTIVE)// 삭제하면 Status.INACTIVE로 변경
+                .status(ACTIVE)
                 .designerName(reviewParamDto.getDesignerName())
                 .satisfaction(reviewParamDto.getSatisfaction())
                 .hairShopName(reviewParamDto.getShopName())
@@ -203,21 +240,32 @@ public class ReviewService {
     }
 
     private Member getMember(Long memberId) {
-        Member findMember = memberRepository.findByIdAndStatus(memberId, ACTIVE).orElseThrow(
-                () -> {
-                    throw new ApiException(ApiResponseStatus.INVALID_MEMBER, "유효하지 않은 Member Id로 Member를 조회하려고 했습니다.");
-                }
-        );
+
+        Member findMember = memberRepository.findByIdAndStatus(memberId, ACTIVE).orElseThrow(() -> {
+            throw new ApiException(ApiResponseStatus.INVALID_MEMBER, "유효하지 않은 Member Id로 Member를 조회하려고 했습니다.");
+        });
 
         return findMember;
     }
 
     private Review getReview(Long reviewId) {
-        Review findReview = reviewRepository.findByIdAndStatus(reviewId, ACTIVE).orElseThrow(
-                () -> {
-                    throw new ApiException(ApiResponseStatus.INVALID_REVIEW, "존재하지 않는 리뷰입니다.");
-                }
-        );
+
+        Review findReview = reviewRepository.findByIdAndStatus(reviewId, ACTIVE).orElseThrow(() -> {
+            throw new ApiException(ApiResponseStatus.INVALID_REVIEW, "존재하지 않는 리뷰입니다.");
+        });
+
         return findReview;
     }
+
+    public List<HairShopDto> orderShopByReviewCount() {
+        //헤어샵을 분리했었어야 한다는 생각
+        return reviewRepository.OrderShopByReviewCount();
+    }
+
+
+//    public Object orderReviewByBookmarkCount() {
+//
+//        PageRequest pageRequest = PageRequest.of(0, 10, Sort.by("bookmarkCount").descending());
+//    }
 }
+//https://techblog.woowahan.com/2709/

@@ -1,7 +1,6 @@
 package review.hairshop.reveiwFacade.review_image;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import review.hairshop.common.BasicEntity;
 import review.hairshop.common.enums.Status;
@@ -21,7 +20,7 @@ public class ReviewImage extends BasicEntity{
     @Column(name = "review_image_id")
     private Long id;
 
-    private String url;
+    private String path;
 
     @Enumerated(EnumType.STRING)
     private Status status;

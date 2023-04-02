@@ -1,4 +1,4 @@
-package review.hairshop.bookmark.responseDto;
+package review.hairshop.bookmark.dto.responseDto;
 
 import lombok.*;
 

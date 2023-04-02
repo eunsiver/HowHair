@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import review.hairshop.bookmark.Bookmark;
 import review.hairshop.bookmark.repository.BookmarkRepository;
-import review.hairshop.bookmark.responseDto.MyBookMarksResponseDto;
+import review.hairshop.bookmark.dto.responseDto.MyBookMarksResponseDto;
 import review.hairshop.common.enums.Status;
 import review.hairshop.common.response.ApiException;
 import review.hairshop.common.response.ApiResponseStatus;
@@ -44,13 +44,11 @@ public class BookmarkService {
         byMemberIdAndReviewId.ifPresentOrElse(
 
                 Bookmark -> {
-
                     if (byMemberIdAndReviewId.get().getStatus().equals(ACTIVE))
-                        changeBookmarkStatus(byMemberIdAndReviewId,INACTIVE);
+                        changeBookmarkStatus(byMemberIdAndReviewId, INACTIVE);
 
-                    else changeBookmarkStatus(byMemberIdAndReviewId,ACTIVE);
-                },
-                () -> {
+                    else changeBookmarkStatus(byMemberIdAndReviewId, ACTIVE);
+                }, () -> {
                     saveNewBookmark(memberId, reviewId);
                 });
     }
@@ -64,7 +62,12 @@ public class BookmarkService {
 
         Member member = getMember(memberId);
         Review review = getReview(reviewId);
-        bookmarkRepository.save(Bookmark.builder().status(ACTIVE).member(member).review(review).build());
+
+        bookmarkRepository.save(Bookmark.builder()
+                .status(ACTIVE)
+                .member(member)
+                .review(review)
+                .build());
     }
 
     public List<MyBookMarksResponseDto> getMyBookmarkList(Long memberId) {
@@ -94,41 +97,38 @@ public class BookmarkService {
     }
 
     private String getImagePath(Bookmark bookmark) {
+
         String imagePath;
         Review review = bookmark.getReview();
 
-        if (!reviewImageRepository.existsByReviewIdAndStatus(review.getId(), ACTIVE))
+        if (!reviewImageRepository.existsByReviewIdAndStatus(review.getId(), ACTIVE)) {
             imagePath = filesUtil.getSampleUrlList().get(0);
-
-        else {
-            ReviewImage reviewImage = reviewImageRepository.findFirstByReviewIdAndStatus(review.getId(), ACTIVE)
-                    .orElseThrow(() -> new ApiException(ApiResponseStatus.NOT_FOUND, "해당 리뷰에 이미지가 없습니다."));
-
-            imagePath = filesUtil.getImageUrlList(List.of(reviewImage.getUrl())).get(0);
+            return imagePath;
         }
+
+        ReviewImage reviewImage = reviewImageRepository.findFirstByReviewIdAndStatus(review.getId(), ACTIVE)
+                .orElseThrow(() -> new ApiException(ApiResponseStatus.NOT_FOUND, "해당 리뷰에 이미지가 없습니다."));
+
+        imagePath = filesUtil.getImageUrlList(List.of(reviewImage.getPath())).get(0);
 
         return imagePath;
     }
 
     private Member getMember(Long memberId) {
 
-        Member findMember = memberRepository.findByIdAndStatus(memberId, ACTIVE).orElseThrow(
-                () -> {
-                    throw new ApiException(ApiResponseStatus.INVALID_MEMBER, "유효하지 않은 Member Id로 Member를 조회하려고 했습니다.");
-                }
-        );
+        Member findMember = memberRepository.findByIdAndStatus(memberId, ACTIVE).orElseThrow(() -> {
+            throw new ApiException(ApiResponseStatus.INVALID_MEMBER, "유효하지 않은 Member Id로 Member를 조회하려고 했습니다.");
+        });
+
         return findMember;
     }
 
     private Review getReview(Long reviewId) {
 
-        Review findReview = reviewRepository.findByIdAndStatus(reviewId, ACTIVE).orElseThrow(
-                () -> {
-                    throw new ApiException(ApiResponseStatus.INVALID_REVIEW, "존재하지 않는 리뷰입니다.");
-                }
-        );
+        Review findReview = reviewRepository.findByIdAndStatus(reviewId, ACTIVE).orElseThrow(() -> {
+            throw new ApiException(ApiResponseStatus.INVALID_REVIEW, "존재하지 않는 리뷰입니다.");
+        });
+
         return findReview;
     }
-
-
 }

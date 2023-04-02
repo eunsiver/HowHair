@@ -1,6 +1,5 @@
 package review.hairshop.bookmark.service;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +9,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import review.hairshop.bookmark.Bookmark;
 import review.hairshop.bookmark.repository.BookmarkRepository;
-import review.hairshop.bookmark.responseDto.BookmarkResponseMessageDto;
 import review.hairshop.common.enums.*;
 import review.hairshop.member.Member;
 import review.hairshop.member.repository.MemberRepository;
@@ -21,7 +19,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
