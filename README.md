@@ -1,5 +1,5 @@
 # 🔮HowHair - Backend🔮
-Hair_Review_Website - Springboot, AWS(ec2,s3), RestAPI, SpringDataJPA
+Hair_Review_Website - Springboot, AWS(ec2,s3), RestAPI, SpringDataJPA, QueryDsl
 
 ## 🔉 프로젝트 소개
 > 헤어샵 리뷰를 작성 및 조회하고, 본인에 맞는 헤어스타일을 추천 받아 헤어 시술 고민을 도와주는 서비스
@@ -27,6 +27,11 @@ Hair_Review_Website - Springboot, AWS(ec2,s3), RestAPI, SpringDataJPA
 |chore|빌드 테스트 업데이트, 패키지 매니저를 설정하는 경우, 주석 추가, 자잘한 문서 수정|
 |code review|코드 리뷰 반영|
 
+</br>
+
+## 🔳 How Hair API
+![image](https://user-images.githubusercontent.com/76419984/230621789-78445479-2fb4-4c99-b18b-b4937b8a9c87.png)
+
 
 ## 🔀 Git-Flow
 ```
@@ -36,4 +41,4 @@ feature/{feature_name} : 기능을 개발하는 브랜치
 release_{version} : 이번 출시 버전을 준비하는 브랜치
 hotfix : 출시 버전에서 발생한 버그를 수정 하는 브랜치
 ```
-[우아한 형제들 기술 블로그 github-flow](https://techblog.woowahan.com/2553/)
+[우아한 형제들 기술 블로그 gith-flow](https://techblog.woowahan.com/2553/)
