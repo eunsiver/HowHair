@@ -3,9 +3,9 @@ package review.hairshop.member;
 import lombok.*;
 import review.hairshop.bookmark.Bookmark;
 import review.hairshop.common.BasicEntity;
-import review.hairshop.common.enums.CurlyStatus;
-import review.hairshop.common.enums.Gender;
-import review.hairshop.common.enums.LengthStatus;
+import review.hairshop.common.enums.memberDefaultInfo.CurlyStatus;
+import review.hairshop.common.enums.memberDefaultInfo.Gender;
+import review.hairshop.common.enums.memberDefaultInfo.LengthStatus;
 import review.hairshop.common.enums.Status;
 import review.hairshop.reveiwFacade.review.Review;
 

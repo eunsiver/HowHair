@@ -12,12 +12,14 @@ import review.hairshop.common.response.ApiResponseStatus;
 import review.hairshop.common.utils.FilesUtil;
 import review.hairshop.member.Member;
 import review.hairshop.member.repository.MemberRepository;
-import review.hairshop.reveiwFacade.dto.HairShopDto;
+
+import review.hairshop.reveiwFacade.dto.HairSearchDto.ReviewSearchCondition;
+import review.hairshop.reveiwFacade.dto.responseDto.MainReviewResponseDto;
 import review.hairshop.reveiwFacade.dto.responseDto.ReviewListResponseDto;
 import review.hairshop.reveiwFacade.dto.responseDto.ReviewDetailResponseDto;
+import review.hairshop.reveiwFacade.review.Review;
 import review.hairshop.reveiwFacade.review_image.ReviewImage;
 import review.hairshop.reveiwFacade.review_image.repository.ReviewImageRepository;
-import review.hairshop.reveiwFacade.review.Review;
 import review.hairshop.reveiwFacade.dto.ReviewParamDto;
 import review.hairshop.reveiwFacade.review.repository.ReviewRepository;
 
@@ -108,12 +110,54 @@ public class ReviewService {
         return returnReviewList(memberId, reviewList);
     }
 
-    public List<ReviewListResponseDto> getHairShopReviewList(Long memberId, String shopName) {
+    public List<ReviewListResponseDto> getPopularBookmarkList(Long memberId) {
 
-        List<Review> reviewList = reviewRepository.findAllByHairShopNameAndStatus(shopName, ACTIVE);
+        int limitNum=30;
+        List<Review> reviewList = reviewRepository.findPopularReviewList(limitNum);
 
         return returnReviewList(memberId, reviewList);
     }
+
+    public List<ReviewListResponseDto> getMyType_recommandReviewList(Long memberId) {
+
+        Member member = getMember(memberId);
+
+        int limitNum = 30;
+
+        List<Review> reviewList = reviewRepository.findMyType_RecommandReviewList(member, limitNum);
+
+        return returnReviewList(memberId, reviewList);
+    }
+
+    public List<ReviewListResponseDto> getSearchReviewList(Long memberId, ReviewSearchCondition condition) {
+
+        List<Review> reviewList = reviewRepository.search(condition);
+
+        return returnReviewList(memberId, reviewList);
+    }
+
+    public List<ReviewListResponseDto> getHairShopReviewList(Long memberId, String shopName) {
+
+        List<Review> reviewList = reviewRepository.findByHairShopName(shopName);
+
+        return returnReviewList(memberId, reviewList);
+    }
+
+    public List<MainReviewResponseDto> getMainMyTypeReviewList(Long memberId) {
+
+        Member member = getMember(memberId);
+
+        int limitNum = 30;
+
+        List<Review> reviewList = reviewRepository.findMyType_RecommandReviewList(member, limitNum);
+
+        return null;
+    }
+
+    public List<MainReviewResponseDto> getMainBookmarkReviewList() {
+        return null;
+    }
+
 
     private List<ReviewListResponseDto> returnReviewList(Long memberId, List<Review> reviewList) {
 
@@ -125,7 +169,7 @@ public class ReviewService {
 
         return reviewList
                 .stream()
-                .map(review -> createReviewListInfo(member, review))
+                .map(review -> createReviewListInfo_withReviewImage(member, review))
                 .collect(Collectors.toList());
     }
 
@@ -137,9 +181,16 @@ public class ReviewService {
         return false;
     }
 
-    private ReviewListResponseDto createReviewListInfo(Member member, Review review) {
+    private ReviewListResponseDto createReviewListInfo_withReviewImage(Member member, Review review) {
 
-        String imagePath;
+        String imagePath = getOneImagePathForReview(review);
+
+        return createReviewListResponse(member, review, imagePath);
+    }
+
+    private String getOneImagePathForReview(Review review) {
+
+        String imagePath = null;
 
         if (!reviewImageRepository.existsByReviewIdAndStatus(review.getId(), ACTIVE))
             imagePath = filesUtil.getSampleUrlList().get(0);
@@ -150,8 +201,73 @@ public class ReviewService {
 
             imagePath = filesUtil.getImageUrlList(List.of(reviewImage.getPath())).get(0);
         }
+        return imagePath;
+    }
 
-        return createReviewListResponse(member, review, imagePath);
+
+    private Status didIBookmark(Member member, Review review) {
+
+        boolean isBookmarkActive = bookmarkRepository.findByMemberIdAndReviewIdAndStatus(member.getId(), review.getId(), ACTIVE)
+                .isPresent();
+
+        if (isBookmarkActive) return ACTIVE;
+
+        return INACTIVE;
+    }
+
+    private int getBookmarkCount(Review review) {
+
+        if (CollectionUtils.isEmpty(review.getBookmarkList()))
+            return 0;
+
+        return review.getBookmarkList().size();
+    }
+
+    private isReaderSameWriter checkReaderEqualWriter(Member member, Review review) {
+
+        if (member.getId().equals(review.getMember().getId()))
+            return SAME;
+
+        return DIFF;
+    }
+
+    private Member getMember(Long memberId) {
+
+        Member findMember = memberRepository.findByIdAndStatus(memberId, ACTIVE).orElseThrow(() -> {
+            throw new ApiException(ApiResponseStatus.INVALID_MEMBER, "유효하지 않은 Member Id로 Member를 조회하려고 했습니다.");
+        });
+
+        return findMember;
+    }
+
+    private Review getReview(Long reviewId) {
+
+        Review findReview = reviewRepository.findByIdAndStatus(reviewId, ACTIVE).orElseThrow(() -> {
+            throw new ApiException(ApiResponseStatus.INVALID_REVIEW, "존재하지 않는 리뷰입니다.");
+        });
+
+        return findReview;
+    }
+
+    private Review createReview(ReviewParamDto reviewParamDto, Member member) {
+
+        return Review.builder()
+                .content(reviewParamDto.getContent())
+                .date(reviewParamDto.getDate())
+                .status(ACTIVE)
+                .designerName(reviewParamDto.getDesignerName())
+                .satisfaction(reviewParamDto.getSatisfaction())
+                .hairShopName(reviewParamDto.getShopName())
+                .price(reviewParamDto.getPrice())
+                .content(reviewParamDto.getContent())
+                .hairCut(reviewParamDto.getHairCut())
+                .dyeing(reviewParamDto.getDyeing())
+                .straightening(reviewParamDto.getStraightening())
+                .perm(reviewParamDto.getPerm())
+                .lengthStatus(reviewParamDto.getLengthStatus())
+                .curlyStatus(reviewParamDto.getCurlyStatus())
+                .member(member)
+                .build();
     }
 
     private ReviewListResponseDto createReviewListResponse(Member member, Review review, String imagePath) {
@@ -192,80 +308,20 @@ public class ReviewService {
                 .bookmarkStatus(didIBookmark(member, review))
                 .build();
     }
-
-    private Status didIBookmark(Member member, Review review) {
-
-        boolean isBookmarkActive = bookmarkRepository.findByMemberIdAndReviewIdAndStatus(member.getId(), review.getId(), ACTIVE)
-                .isPresent();
-
-        if (isBookmarkActive) return ACTIVE;
-
-        return INACTIVE;
-    }
-
-    private int getBookmarkCount(Review review) {
-
-        if (CollectionUtils.isEmpty(review.getBookmarkList()))
-            return 0;
-
-        return review.getBookmarkList().size();
-    }
-
-    private isReaderSameWriter checkReaderEqualWriter(Member member, Review review) {
-
-        if (member.getId().equals(review.getMember().getId()))
-            return SAME;
-
-        return DIFF;
-    }
-
-    private Review createReview(ReviewParamDto reviewParamDto, Member member) {
-
-        return Review.builder()
-                .content(reviewParamDto.getContent())
-                .date(reviewParamDto.getDate())
-                .status(ACTIVE)
-                .designerName(reviewParamDto.getDesignerName())
-                .satisfaction(reviewParamDto.getSatisfaction())
-                .hairShopName(reviewParamDto.getShopName())
-                .price(reviewParamDto.getPrice())
-                .content(reviewParamDto.getContent())
-                .hairCut(reviewParamDto.getHairCut())
-                .dyeing(reviewParamDto.getDyeing())
-                .straightening(reviewParamDto.getStraightening())
-                .perm(reviewParamDto.getPerm())
-                .lengthStatus(reviewParamDto.getLengthStatus())
-                .member(member)
-                .build();
-    }
-
-    private Member getMember(Long memberId) {
-
-        Member findMember = memberRepository.findByIdAndStatus(memberId, ACTIVE).orElseThrow(() -> {
-            throw new ApiException(ApiResponseStatus.INVALID_MEMBER, "유효하지 않은 Member Id로 Member를 조회하려고 했습니다.");
-        });
-
-        return findMember;
-    }
-
-    private Review getReview(Long reviewId) {
-
-        Review findReview = reviewRepository.findByIdAndStatus(reviewId, ACTIVE).orElseThrow(() -> {
-            throw new ApiException(ApiResponseStatus.INVALID_REVIEW, "존재하지 않는 리뷰입니다.");
-        });
-
-        return findReview;
-    }
-
-    public List<HairShopDto> orderShopByReviewCount() {
-        //헤어샵을 분리했었어야 한다는 생각
-        return reviewRepository.OrderShopByReviewCount();
-    }
-
-
-//    public Object orderReviewByBookmarkCount() {
-//
-//        PageRequest pageRequest = PageRequest.of(0, 10, Sort.by("bookmarkCount").descending());
-//    }
 }
-//https://techblog.woowahan.com/2709/
+
+
+//        if (!condition.getHairCutList().isEmpty())
+//            reviewList = reviewRepository.findHairCutReviewList();
+//
+//        else if (hairType.equals(HairType.Perm))
+//            reviewList = reviewRepository.findPermReviewList();
+//
+//        else if (hairType.equals(HairType.Straightening))
+//            reviewList = reviewRepository.findStraigtheningReviewList();
+//
+//        else if (hairType.equals(HairType.Dyeing))
+//            reviewList = reviewRepository.findDyeingReviewList();
+//
+//        else
+//            throw new ApiException(ApiResponseStatus.WRONG_HAIR_TYPE, "잘못된 헤어 타입입니다.");

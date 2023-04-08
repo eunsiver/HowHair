@@ -13,7 +13,7 @@ import javax.persistence.*;
 @Table(name = "review_image")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder
+
 public class ReviewImage extends BasicEntity{
 
     @Id @GeneratedValue
@@ -28,6 +28,15 @@ public class ReviewImage extends BasicEntity{
     @JoinColumn
     @ManyToOne(fetch = FetchType.LAZY)
     private Review review;
+
+    @Builder
+    public ReviewImage(String path, Status status, Review review) {
+        this.path = path;
+        this.status = status;
+        this.review = review;
+        review.getReviewImageList().add(this);
+    }
+
 
     public void changeStatus(Status status){
         this.status = status;

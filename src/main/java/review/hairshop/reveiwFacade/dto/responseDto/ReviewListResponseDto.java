@@ -5,6 +5,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import review.hairshop.common.enums.*;
+import review.hairshop.common.enums.hairStyle.Dyeing;
+import review.hairshop.common.enums.hairStyle.Hair_Cut;
+import review.hairshop.common.enums.hairStyle.Perm;
+import review.hairshop.common.enums.hairStyle.Straightening;
 
 @Builder
 @AllArgsConstructor
@@ -21,4 +25,6 @@ public class ReviewListResponseDto {
     private Hair_Cut hairCut;
     private Long price;
     private Status bookmarkStatus;
+
+
 }

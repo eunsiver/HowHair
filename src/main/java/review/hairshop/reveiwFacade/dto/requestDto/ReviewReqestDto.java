@@ -5,6 +5,11 @@ import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.multipart.MultipartFile;
 import review.hairshop.common.enums.*;
+import review.hairshop.common.enums.hairStyle.Dyeing;
+import review.hairshop.common.enums.hairStyle.Hair_Cut;
+import review.hairshop.common.enums.hairStyle.Perm;
+import review.hairshop.common.enums.hairStyle.Straightening;
+import review.hairshop.common.enums.memberDefaultInfo.LengthStatus;
 
 
 import javax.validation.constraints.NotNull;

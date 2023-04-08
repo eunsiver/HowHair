@@ -6,6 +6,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 import review.hairshop.common.enums.*;
+import review.hairshop.common.enums.hairStyle.Dyeing;
+import review.hairshop.common.enums.hairStyle.Hair_Cut;
+import review.hairshop.common.enums.hairStyle.Perm;
+import review.hairshop.common.enums.hairStyle.Straightening;
+import review.hairshop.common.enums.memberDefaultInfo.CurlyStatus;
+import review.hairshop.common.enums.memberDefaultInfo.LengthStatus;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -43,4 +50,6 @@ public class ReviewParamDto {
 
     // 내용
     private String content;
+
+    private CurlyStatus curlyStatus;
 }

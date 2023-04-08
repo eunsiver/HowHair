@@ -1,4 +1,4 @@
-package review.hairshop.common.enums;
+package review.hairshop.common.enums.hairStyle;
 
 public enum Perm {
     레이어드펌, 히피펌, 빌드펌, 젤리펌, 허쉬펌, 볼륨매직,

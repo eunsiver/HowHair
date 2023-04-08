@@ -1,9 +1,9 @@
 package review.hairshop.member.dto;
 
 import lombok.*;
-import review.hairshop.common.enums.CurlyStatus;
-import review.hairshop.common.enums.Gender;
-import review.hairshop.common.enums.LengthStatus;
+import review.hairshop.common.enums.memberDefaultInfo.CurlyStatus;
+import review.hairshop.common.enums.memberDefaultInfo.Gender;
+import review.hairshop.common.enums.memberDefaultInfo.LengthStatus;
 
 @Getter
 @Setter

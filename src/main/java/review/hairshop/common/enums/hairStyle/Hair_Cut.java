@@ -1,4 +1,4 @@
-package review.hairshop.common.enums;
+package review.hairshop.common.enums.hairStyle;
 
 public enum Hair_Cut {
     ALL, 레이어드컷, 샤기컷, 원랭스컷, 비대칭컷, 픽시컷,

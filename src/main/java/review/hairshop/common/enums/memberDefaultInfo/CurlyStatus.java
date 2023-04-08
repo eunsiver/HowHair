@@ -1,4 +1,4 @@
-package review.hairshop.common.enums;
+package review.hairshop.common.enums.memberDefaultInfo;
 
 public enum CurlyStatus {
 
