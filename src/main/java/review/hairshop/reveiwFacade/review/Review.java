@@ -1,10 +1,15 @@
 package review.hairshop.reveiwFacade.review;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import review.hairshop.bookmark.Bookmark;
 import review.hairshop.common.BasicEntity;
 import review.hairshop.common.enums.*;
+import review.hairshop.common.enums.hairStyle.Dyeing;
+import review.hairshop.common.enums.hairStyle.Hair_Cut;
+import review.hairshop.common.enums.hairStyle.Perm;
+import review.hairshop.common.enums.hairStyle.Straightening;
+import review.hairshop.common.enums.memberDefaultInfo.CurlyStatus;
+import review.hairshop.common.enums.memberDefaultInfo.LengthStatus;
 import review.hairshop.member.Member;
 import review.hairshop.reveiwFacade.review_image.ReviewImage;
 
@@ -18,9 +23,11 @@ import java.util.List;
 @Table(name = "review")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class Review extends BasicEntity{
+@ToString(of = {"id", "status"})
+public class Review extends BasicEntity {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     @Column(name = "review_id")
     private Long id;
 
@@ -34,8 +41,8 @@ public class Review extends BasicEntity{
     @Enumerated(EnumType.STRING)
     private LengthStatus lengthStatus;
 
-//    @Enumerated(EnumType.STRING)
-//    private CurlyStatus curlyStatus;
+    @Enumerated(EnumType.STRING)
+    private CurlyStatus curlyStatus;
 
     @Enumerated(EnumType.STRING)
     private Status status;
@@ -69,14 +76,15 @@ public class Review extends BasicEntity{
 
     /**
      * [변경 메서드]
-     * */
+     */
 
-    public void changeStatus(Status status){
+    public void changeStatus(Status status) {
         this.status = status;
     }
 
     @Builder
-    public Review(Satisfaction satisfaction, String hairShopName, String designerName, LengthStatus lengthStatus, Status status, Long price, String content, LocalDate date, Hair_Cut hairCut, Dyeing dyeing, Perm perm, Straightening straightening, Member member) {
+    public Review(CurlyStatus curlyStatus, Satisfaction satisfaction, String hairShopName, String designerName, LengthStatus lengthStatus, Status status, Long price, String content, LocalDate date, Hair_Cut hairCut, Dyeing dyeing, Perm perm, Straightening straightening, Member member) {
+        this.curlyStatus = curlyStatus;
         this.satisfaction = satisfaction;
         this.hairShopName = hairShopName;
         this.designerName = designerName;
@@ -87,7 +95,7 @@ public class Review extends BasicEntity{
         this.date = date;
         this.hairCut = hairCut;
         this.perm = perm;
-        this.dyeing=dyeing;
+        this.dyeing = dyeing;
         this.straightening = straightening;
         this.member = member;
     }

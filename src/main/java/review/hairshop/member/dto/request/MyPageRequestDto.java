@@ -4,9 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import review.hairshop.common.enums.CurlyStatus;
-import review.hairshop.common.enums.Gender;
-import review.hairshop.common.enums.LengthStatus;
+import review.hairshop.common.enums.memberDefaultInfo.CurlyStatus;
+import review.hairshop.common.enums.memberDefaultInfo.Gender;
+import review.hairshop.common.enums.memberDefaultInfo.LengthStatus;
 
 
 import javax.validation.constraints.NotNull;

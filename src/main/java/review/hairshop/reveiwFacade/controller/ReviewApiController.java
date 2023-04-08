@@ -4,15 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import review.hairshop.common.response.ApiResponse;
-import review.hairshop.reveiwFacade.dto.HairShopDto;
+import review.hairshop.reveiwFacade.dto.HairSearchDto.ReviewSearchCondition;
+import review.hairshop.reveiwFacade.dto.Result;
 import review.hairshop.reveiwFacade.dto.requestDto.ReviewReqestDto;
 import review.hairshop.reveiwFacade.dto.ReviewParamDto;
-import review.hairshop.reveiwFacade.dto.responseDto.ReviewListResponseDto;
 import review.hairshop.reveiwFacade.dto.responseDto.ReviewDetailResponseDto;
 import review.hairshop.reveiwFacade.dto.responseDto.ReviewResponseMessageDto;
 import review.hairshop.reveiwFacade.service.ReviewService;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -47,9 +45,9 @@ public class ReviewApiController {
     }
 
     @GetMapping("/my/review/list")
-    public ApiResponse<List<ReviewListResponseDto>> getMyReviewList(@RequestAttribute Long memberId){
+    public ApiResponse<Result> getMyReviewList(@RequestAttribute Long memberId){
 
-        return ApiResponse.success(reviewService.getMyReviewList(memberId));
+        return ApiResponse.success(new Result(reviewService.getMyReviewList(memberId)));
     }
 
     @PatchMapping("/review/withdraw/{reviewId}")
@@ -59,35 +57,62 @@ public class ReviewApiController {
         return ApiResponse.success(ReviewResponseMessageDto.builder().resultMessage("리뷰가 삭제되었습니다.").build());
     }
 
-    @GetMapping("/hairshop/review/list")
-    public ApiResponse<List<ReviewListResponseDto>> getHairShopReviewList(@RequestAttribute Long memberId,@RequestParam String shopName){
+    /************************************************************************************************************************************************/
 
-        return ApiResponse.success(reviewService.getHairShopReviewList(memberId,shopName));
+    @GetMapping("/review/list/cut")
+    public ApiResponse<Result> getHairCutReviewList(@RequestAttribute Long memberId, ReviewSearchCondition condition){
+
+        return ApiResponse.success(new Result(reviewService.getSearchReviewList(memberId,condition)));
     }
+    @GetMapping("/review/list/perm")
+    public ApiResponse<Result> getPermReviewList(@RequestAttribute Long memberId, ReviewSearchCondition condition){
+
+        return ApiResponse.success(new Result(reviewService.getSearchReviewList(memberId, condition)));
+    }
+    @GetMapping("/review/list/straightening")
+    public ApiResponse<Result> getStraighteningReviewList(@RequestAttribute Long memberId, ReviewSearchCondition condition){
+
+        return ApiResponse.success(new Result(reviewService.getSearchReviewList(memberId, condition)));
+    }
+    @GetMapping("/review/list/dyeing")
+    public ApiResponse<Result> getDyeingReviewList(@RequestAttribute Long memberId, ReviewSearchCondition condition){
+
+        return ApiResponse.success(new Result(reviewService.getSearchReviewList(memberId,condition)));
+    }
+
 
     /************************************************************************************************************************************************/
 
+    @GetMapping("/recommend/mytype/list")
+    public ApiResponse<Result> getMyTypeReviewList(@RequestAttribute Long memberId){
 
-//    @GetMapping("/recommend/mytype/list")
-//    public ApiResponse<List<ReviewListResponseDto>> getMyTypeReviewList(@RequestAttribute Long memberId){
-//
-//
-//        return ApiResponse.success(reviewService.getMyTypeReviewList(memberId));
-//    }
-
-
-    // 리뷰가 가장 많은 인기 많은 미용실 리스트 조회
-    @GetMapping("/recommend/hairshop/list")
-    public ApiResponse<List<HairShopDto>> getPopularHairShopList(){
-
-        return ApiResponse.success(reviewService.orderShopByReviewCount());
+        return ApiResponse.success(new Result(reviewService.getMyType_recommandReviewList(memberId)));
     }
 
-//    //북마크가 가장 많은 인기 많은 스타일(Review 리스트) 조회
-//    @GetMapping("/recommend/bookmark/list")
-//    public ApiResponse<List<ReviewListResponseDto>> getPopularReviewList(){
-//
-//        return ApiResponse.success(reviewService.orderReviewByBookmarkCount());
-//    }
+   // 북마크가 가장 많은 인기 많은 스타일(Review 리스트) 조회
+    @GetMapping("/recommend/bookmark/list")
+    public ApiResponse<Result> getPopularReviewList(@RequestAttribute Long memberId){
 
+        return ApiResponse.success(new Result(reviewService.getPopularBookmarkList(memberId)));
+    }
+
+    /************************************************************************************************************************************************/
+    //미용실 검색 화면
+    @GetMapping("/hairshop/review/list")
+    public ApiResponse<Result> getHairShopReviewList(@RequestAttribute Long memberId, @RequestParam String shopName){
+
+        return ApiResponse.success(new Result(reviewService.getHairShopReviewList(memberId,shopName)));
+    }
+    /************************************************************************************************************************************************/
+     //메인 화면
+    @GetMapping("/main/mytype/list")
+    public ApiResponse<Result> getMain_MyTypeReviewList(@RequestAttribute Long memberId){
+
+        return ApiResponse.success(new Result(reviewService.getMainMyTypeReviewList(memberId)));
+    }
+    @GetMapping("/main/bookmark/list")
+    public ApiResponse<Result> getMain_BookmarkReviewList(){
+
+        return ApiResponse.success(new Result(reviewService.getMainBookmarkReviewList()));
+    }
 }

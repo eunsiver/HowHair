@@ -1,7 +1,10 @@
 package review.hairshop.bookmark.dto.responseDto;
 
 import lombok.*;
-import review.hairshop.common.enums.*;
+import review.hairshop.common.enums.hairStyle.Dyeing;
+import review.hairshop.common.enums.hairStyle.Hair_Cut;
+import review.hairshop.common.enums.hairStyle.Perm;
+import review.hairshop.common.enums.hairStyle.Straightening;
 
 @Builder
 @Getter

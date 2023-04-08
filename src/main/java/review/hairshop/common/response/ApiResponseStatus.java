@@ -63,7 +63,7 @@ public enum ApiResponseStatus {
     INVALID_BOOKMARK(false,2126 ,"존재하지 않는 북마크입니다."),
     NOT_FOUND(false,2127 ,"DB에서 찾을 수 없습니다."),
 
-
+    WRONG_HAIR_TYPE(false,2128 ,"잘못된 헤어 타입입니다." ),
     /**
      * 3000 : Response 오류
      * */
@@ -71,7 +71,7 @@ public enum ApiResponseStatus {
     /**
      * 4000 : Database, Server 오류
      * */
-    INTERNAL_SERVER_ERROR(false, 4000, "예상하지 못한 예외가 발생하였습니다."), ;
+    INTERNAL_SERVER_ERROR(false, 4000, "예상하지 못한 예외가 발생하였습니다.");
 
 
 
