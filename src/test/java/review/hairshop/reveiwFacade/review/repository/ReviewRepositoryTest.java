@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import review.hairshop.member.Member;
+import review.hairshop.member.QMember;
 import review.hairshop.reveiwFacade.review.QReview;
 import review.hairshop.reveiwFacade.review.Review;
 
@@ -20,6 +21,8 @@ import java.util.stream.Collectors;
 import static com.querydsl.core.types.ExpressionUtils.count;
 import static review.hairshop.bookmark.QBookmark.bookmark;
 import static review.hairshop.common.enums.Status.*;
+import static review.hairshop.member.QMember.*;
+import static review.hairshop.member.QMember.member;
 import static review.hairshop.reveiwFacade.review.QReview.*;
 
 @SpringBootTest
@@ -115,12 +118,25 @@ class ReviewRepositoryTest {
 
 
     }
-//    @Test
-//    public void test(Member member){
-//        List<Review> r=queryFactory
-//                .selectFrom(review)
-//
-//    }
+    @Test
+    public void test(Member memberParam){
+
+
+        List<Long> r=queryFactory
+                .select(review.id)
+                .from(bookmark)
+                .leftJoin(bookmark.review,review)
+                .leftJoin(bookmark.member, member)
+                .where(review.status.eq(ACTIVE),bookmark.status.eq(ACTIVE), member.status.eq(ACTIVE)
+                ,member.gender.eq(memberParam.getGender())
+                        ,member.lengthStatus.eq(memberParam.getLengthStatus())
+                                .or(member.curlyStatus.eq(memberParam.getCurlyStatus())))
+                .groupBy(review.id)
+                .orderBy(review.id.count().desc(),review.createdAt.desc())
+                .limit(30)
+                .fetch();
+
+    }
 
 
 }

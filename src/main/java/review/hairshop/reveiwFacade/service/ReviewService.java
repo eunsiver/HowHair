@@ -111,24 +111,6 @@ public class ReviewService {
         return returnReviewListDto(memberId, reviewList);
     }
 
-    private List<ReviewListResponseDto> returnReviewListDto(Long memberId,List<Review> reviewList){
-
-        Member member= getMember(memberId);
-
-        if (CollectionUtils.isEmpty(reviewList)) {
-            return List.of();
-        }
-
-        List<String> imageList = getOneImageForReview(reviewList);
-
-        List<ReviewListResponseDto> list =
-                IntStream.range(0,reviewList.size())
-                        .mapToObj(i-> createReviewListResponse(member,reviewList.get(i),imageList.get(i)))
-                        .collect(Collectors.toList());
-
-        return list;
-    }
-
     public List<ReviewListResponseDto> getPopularBookmarkList(Long memberId) {
 
         int limitNum=30;
@@ -142,7 +124,6 @@ public class ReviewService {
         Member member = getMember(memberId);
 
         int limitNum = 30;
-
         List<Review> reviewList = reviewRepository.findMyType_RecommandReviewList(member, limitNum);
 
         return returnReviewListDto(memberId, reviewList);
@@ -166,34 +147,63 @@ public class ReviewService {
 
         Member member = getMember(memberId);
 
-        int limitNum = 30;
-
+        int limitNum = 3;
         List<Review> reviewList = reviewRepository.findMyType_RecommandReviewList(member, limitNum);
 
-        return null;
+        return returnReviewListDto_ForMain(reviewList);
     }
 
     public List<MainReviewResponseDto> getMainBookmarkReviewList() {
-        return null;
+
+        int limitNum = 10;
+        List<Review> reviewList = reviewRepository.findPopularReviewList(limitNum);
+
+        return  returnReviewListDto_ForMain(reviewList);
     }
 
+    /****************************************************************************************/
 
-    private List<String> getOneImageForReview(List<Review> reviewList) {
+    private List<MainReviewResponseDto> returnReviewListDto_ForMain( List<Review> reviewList){
+
+        if (CollectionUtils.isEmpty(reviewList)) {
+            return List.of();
+        }
+
+        List<String> imageList = getImageListForEachReview(reviewList);
+
+        List<MainReviewResponseDto> list =
+                IntStream.range(0,reviewList.size())
+                        .mapToObj(i-> createMainReviewListResponse(reviewList.get(i),imageList.get(i)))
+                        .collect(Collectors.toList());
+
+        return list;
+    }
+
+    private List<ReviewListResponseDto> returnReviewListDto(Long memberId,List<Review> reviewList){
+
+        Member member= getMember(memberId);
+
+        if (CollectionUtils.isEmpty(reviewList)) {
+            return List.of();
+        }
+
+        List<String> imageList = getImageListForEachReview(reviewList);
+
+        List<ReviewListResponseDto> list =
+                IntStream.range(0,reviewList.size())
+                        .mapToObj(i-> createReviewListResponse(member,reviewList.get(i),imageList.get(i)))
+                        .collect(Collectors.toList());
+
+        return list;
+    }
+
+    private List<String> getImageListForEachReview(List<Review> reviewList) {
 
         return reviewList
                 .stream()
                 .map(review -> getOneImagePathForReview(review))
                 .collect(Collectors.toList());
     }
-
-    private boolean hasAuthorityToDelete(Long memberId, Review review) {
-
-        if (memberId.equals(review.getMember().getId()))
-            return true;
-
-        return false;
-    }
-
 
     private String getOneImagePathForReview(Review review) {
 
@@ -211,6 +221,15 @@ public class ReviewService {
         return imagePath;
     }
 
+    /******************************************************************************************/
+
+    private boolean hasAuthorityToDelete(Long memberId, Review review) {
+
+        if (memberId.equals(review.getMember().getId()))
+            return true;
+
+        return false;
+    }
 
     private Status didIBookmark(Member member, Review review) {
 
@@ -238,6 +257,7 @@ public class ReviewService {
         return DIFF;
     }
 
+    /*********************************************************************************************/
     private Member getMember(Long memberId) {
 
         Member findMember = memberRepository.findByIdAndStatus(memberId, ACTIVE).orElseThrow(() -> {
@@ -256,6 +276,20 @@ public class ReviewService {
         return findReview;
     }
 
+
+    /*************************************************************************************************/
+    private MainReviewResponseDto createMainReviewListResponse(Review review,String imagePath){
+
+        return MainReviewResponseDto.builder()
+                .reviewId(review.getId())
+                .dyeing(review.getDyeing())
+                .perm(review.getPerm())
+                .hairCut(review.getHairCut())
+                .straightening(review.getStraightening())
+                .imagePath(imagePath)
+                .build();
+    }
+
     private Review createReview(ReviewParamDto reviewParamDto, Member member) {
 
         return Review.builder()
@@ -272,7 +306,7 @@ public class ReviewService {
                 .straightening(reviewParamDto.getStraightening())
                 .perm(reviewParamDto.getPerm())
                 .lengthStatus(reviewParamDto.getLengthStatus())
-                .curlyStatus(reviewParamDto.getCurlyStatus())
+                .curlyStatus(member.getCurlyStatus())
                 .member(member)
                 .build();
     }
@@ -280,6 +314,7 @@ public class ReviewService {
     private ReviewListResponseDto createReviewListResponse(Member member, Review review, String imagePath) {
 
         return ReviewListResponseDto.builder()
+                .reviewId(review.getId())
                 .shopImg(imagePath)
                 .shopName(review.getHairShopName())
                 .price(review.getPrice())
@@ -316,19 +351,3 @@ public class ReviewService {
                 .build();
     }
 }
-
-
-//        if (!condition.getHairCutList().isEmpty())
-//            reviewList = reviewRepository.findHairCutReviewList();
-//
-//        else if (hairType.equals(HairType.Perm))
-//            reviewList = reviewRepository.findPermReviewList();
-//
-//        else if (hairType.equals(HairType.Straightening))
-//            reviewList = reviewRepository.findStraigtheningReviewList();
-//
-//        else if (hairType.equals(HairType.Dyeing))
-//            reviewList = reviewRepository.findDyeingReviewList();
-//
-//        else
-//            throw new ApiException(ApiResponseStatus.WRONG_HAIR_TYPE, "잘못된 헤어 타입입니다.");
