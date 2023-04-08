@@ -36,61 +36,43 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
     @Override
     public List<Review> findPopularReviewList(int limitNum) {
 
-        List<Long> reviewIdList = getPopularReviewIdList_ByBookmark(limitNum);
+        List<Long> reviewIdList = getReviewIdList_OrderByBookmark(limitNum);
 
-        return findReviewList_byReviewIdList(reviewIdList);
+        List<Review> reviewList = findReviewList_byReviewIdList(reviewIdList);
+
+        return reviewList;
     }
-    private List<Long> getPopularReviewIdList_ByBookmark(int limitNum){
-        return queryFactory
+
+    @Override
+    public List<Review> findMyType_RecommandReviewList(Member memberParam, int limitNum) {
+
+        // 북마크, 리뷰, 멤버 조인
+        //다 active하고, member와 gender 같고, review의 머리길이가 같거나, 곱슬정도가 같거나 한 것들을
+        //group by order by 해서 reviewId만 뽑아냄
+        //그 후 reviewList 추출
+
+        List<Long> reviewIdList = queryFactory
                 .select(review.id)
                 .from(bookmark)
                 .leftJoin(bookmark.review, review)
-                .where(bookmark.status.eq(ACTIVE), review.status.eq(ACTIVE))
+                .leftJoin(bookmark.member, member)
+                .where(review.status.eq(ACTIVE), bookmark.status.eq(ACTIVE), member.status.eq(ACTIVE)
+                        , member.gender.eq(memberParam.getGender())
+                        , review.lengthStatus.eq(memberParam.getLengthStatus())
+                                .or(review.curlyStatus.eq(memberParam.getCurlyStatus())))
                 .groupBy(review.id)
                 .orderBy(review.id.count().desc(), review.createdAt.desc())
                 .limit(limitNum)
                 .fetch();
-    }
 
-    @Override
-    public List<Review> findMyType_RecommandReviewList(Member memberParam,int limitNum) {
-
-        List<Long> reviewIdList = getMyTypeReviewIdList_ByBookmark(memberParam,limitNum);
-
-        return findReviewList_byReviewIdList(reviewIdList);
-    }
-
-    private List<Long> getMyTypeReviewIdList_ByBookmark(Member memberParam, int limitNum){
-
-        return queryFactory
-                .select(bookmark.review.id)
-                .from(bookmark)
-                .leftJoin(bookmark.member, member)
-                .where(bookmark.status.eq(ACTIVE), member.status.eq(ACTIVE)
-                        , member.curlyStatus.eq(memberParam.getCurlyStatus())
-                        , member.lengthStatus.eq(memberParam.getLengthStatus())
-                        , member.curlyStatus.eq(memberParam.getCurlyStatus()))
-                .groupBy(bookmark.review.id)
-                .orderBy(bookmark.review.id.count().desc())
-                .limit(limitNum)
-                .fetch();
-    }
-
-
-    public List<Review> findReviewList_byReviewIdList(List<Long> reviewIdList) {
-        List<Review> reviewList = reviewIdList
-                .stream()
-                .map(reviewId -> queryFactory
-                        .selectFrom(review)
-                        .where(review.id.eq(reviewId))
-                        .fetchOne())
-                .collect(Collectors.toList());
+        List<Review> reviewList = findReviewList_byReviewIdList(reviewIdList);
 
         return reviewList;
     }
 
     @Override
     public List<Review> findByHairShopName(String hairShopName) {
+
         return queryFactory
                 .selectFrom(review)
                 .where(review.status.eq(ACTIVE), review.hairShopName.like(hairShopName))
@@ -104,15 +86,45 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .selectFrom(review)
                 .leftJoin(review.member, member)
                 .where(genderEq(condition.getGender()), lengthStatusEq(condition.getLengthStatus())
-                        , curlyStatusEq(condition.getCurlyStatus()), hairCutIn(condition.getHairCutList())
-                        , permIn(condition.getPermList()), dyeingIn(condition.getDyeingList())
-                        , straighteningIn(condition.getStraighteningList())
+                        , curlyStatusEq(condition.getCurlyStatus()), hairCutIn(condition.getHairCut())
+                        , permIn(condition.getPerm()), dyeingIn(condition.getDyeing())
+                        , straighteningIn(condition.getStraightening())
                         , startPriceGoe(condition.getStartPrice()), endPriceLoe(condition.getEndPrice())
                         , member.status.eq(ACTIVE), review.status.eq(ACTIVE))
                 .orderBy(getOrder(condition.getSearchFilter()))
                 .fetch();
     }
 
+    /***********************************************************************************************/
+
+    private List<Long> getReviewIdList_OrderByBookmark(int limitNum) {
+
+        return queryFactory
+                .select(review.id)
+                .from(bookmark)
+                .leftJoin(bookmark.review, review)
+                .where(bookmark.status.eq(ACTIVE), review.status.eq(ACTIVE))
+                .groupBy(review.id)
+                .orderBy(review.id.count().desc(), review.createdAt.desc())
+                .limit(limitNum)
+                .fetch();
+    }
+
+    public List<Review> findReviewList_byReviewIdList(List<Long> reviewIdList) {
+
+        List<Review> reviewList = reviewIdList
+                .stream()
+                .map(reviewId -> queryFactory
+                        .selectFrom(review)
+                        .where(review.id.eq(reviewId))
+                        .fetchOne())
+                .collect(Collectors.toList());
+
+        return reviewList;
+
+    }
+
+    /********************************************************************************/
 
     private BooleanExpression genderEq(Gender gender) {
         return isEmpty(gender) ? null : member.gender.eq(gender);
@@ -161,7 +173,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
         if (isEmpty(straightening))
             return null;
 
-        else if(straightening.contains(Straightening.ALL))
+        else if (straightening.contains(Straightening.ALL))
             return review.straightening.ne(Straightening.NONE);
 
         return review.straightening.in(straightening);
@@ -188,101 +200,14 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
         }
         return review.createdAt.desc();
     }
+}
 
-    //
-//    @Override
-//    public List<Review> findHairCutReviewList() {
-//        return queryFactory
-//                .selectFrom(review)
-//                .where(review.status.eq(ACTIVE), review.hairCut.ne(Hair_Cut.NONE))
-//                .fetch();
-//    }
-//
-//    @Override
-//    public List<Review> findPermReviewList() {
-//        return queryFactory
-//                .selectFrom(review)
-//                .where(review.status.eq(ACTIVE), review.perm.ne(Perm.NONE))
-//                .fetch();
-//    }
-//
-//    @Override
-//    public List<Review> findStraigtheningReviewList() {
-//        return queryFactory
-//                .selectFrom(review)
-//                .where(review.status.eq(ACTIVE), review.straightening.ne(Straightening.NONE))
-//                .fetch();
-//    }
-//
-//    @Override
-//    public List<Review> findDyeingReviewList() {
-//        return queryFactory
-//                .selectFrom(review)
-//                .where(review.status.eq(ACTIVE), review.dyeing.ne(Dyeing.NONE))
-//                .fetch();
-//    }
-//
-
-
-//    @Override
-//    public List<Review> permSearch(PermReviewCondition dto) {
-//        return queryFactory
-//                .selectFrom(review)
-//                .leftJoin(review.member, member)
-//                .where(genderEq(dto.getGender()), lengthStatusEq(dto.getLengthStatus())
-//                        , curlyStatusEq(dto.getCurlyStatus()), permIn(dto.getPermList())
-//                        , startPriceGoe(dto.getStartPrice()), endPriceLoe(dto.getEndPrice())
-//                        , member.status.eq(ACTIVE), review.status.eq(ACTIVE))
-//                .orderBy(getOrder(dto.getSearchFilter()))
-//                .fetch();
-//    }
-//
-//    @Override
-//    public List<Review> dyeingSearch(DyeingReviewCondition dto) {
-//        return queryFactory
-//                .selectFrom(review)
-//                .leftJoin(review.member, member)
-//                .where(genderEq(dto.getGender()), lengthStatusEq(dto.getLengthStatus())
-//                        , curlyStatusEq(dto.getCurlyStatus()), dyeingIn(dto.getDyeingList())
-//                        , startPriceGoe(dto.getStartPrice()), endPriceLoe(dto.getEndPrice())
-//                        , member.status.eq(ACTIVE), review.status.eq(ACTIVE))
-//                .orderBy(getOrder(dto.getSearchFilter()))
-//                .fetch();
-//    }
-//
-//    @Override
-//    public List<Review> straighteningSearch(StraighteningReviewCondition dto) {
-//        return queryFactory
-//                .selectFrom(review)
-//                .leftJoin(review.member, member)
-//                .where(genderEq(dto.getGender()), lengthStatusEq(dto.getLengthStatus())
-//                        , curlyStatusEq(dto.getCurlyStatus()), straighteningIn(dto.getStraighteningList())
-//                        , startPriceGoe(dto.getStartPrice()), endPriceLoe(dto.getEndPrice())
-//                        , member.status.eq(ACTIVE), review.status.eq(ACTIVE))
-//                .orderBy(getOrder(dto.getSearchFilter()))
-//                .fetch();
-//    }
-
-    //    @Override
-//    public List<Review> findPopularReviewList() {
-//        List<Long> reviewIdList_byBookmark = queryFactory
-//                .select(bookmark.review.id)
-//                .from(bookmark)
-//                .where(bookmark.status.eq(ACTIVE))
-//                .groupBy(bookmark.review.id)
-//                .orderBy(bookmark.review.id.count().desc())
-//                .limit(30)
-//                .fetch();
-//
-//        List<Review> reviewList= reviewIdList_byBookmark
+//        List<Review> MyTypeReviewList = reviewIdList
 //                .stream()
-//                .map(reviewId-> queryFactory
+//                .map(reviewId -> queryFactory
 //                        .selectFrom(review)
-//                        .where(review.id.eq(reviewId),review.status.eq(ACTIVE))
+//                        .where(review.member.gender.eq(memberParam.getGender())
+//                        ,review.lengthStatus.eq(memberParam.getLengthStatus())
+//                                        .or(review.curlyStatus.eq(memberParam.getCurlyStatus())))
 //                        .fetchOne())
 //                .collect(Collectors.toList());
-//
-//        return reviewList;
-//    }
-
-}
