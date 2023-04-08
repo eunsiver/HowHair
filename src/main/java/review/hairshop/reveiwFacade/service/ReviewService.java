@@ -25,6 +25,7 @@ import review.hairshop.reveiwFacade.review.repository.ReviewRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static review.hairshop.common.enums.Status.*;
 import static review.hairshop.common.enums.isReaderSameWriter.DIFF;
@@ -107,7 +108,25 @@ public class ReviewService {
 
         List<Review> reviewList = reviewRepository.findAllByMemberIdAndStatus(memberId, ACTIVE);
 
-        return returnReviewList(memberId, reviewList);
+        return returnReviewListDto(memberId, reviewList);
+    }
+
+    private List<ReviewListResponseDto> returnReviewListDto(Long memberId,List<Review> reviewList){
+
+        Member member= getMember(memberId);
+
+        if (CollectionUtils.isEmpty(reviewList)) {
+            return List.of();
+        }
+
+        List<String> imageList = getOneImageForReview(reviewList);
+
+        List<ReviewListResponseDto> list =
+                IntStream.range(0,reviewList.size())
+                        .mapToObj(i-> createReviewListResponse(member,reviewList.get(i),imageList.get(i)))
+                        .collect(Collectors.toList());
+
+        return list;
     }
 
     public List<ReviewListResponseDto> getPopularBookmarkList(Long memberId) {
@@ -115,7 +134,7 @@ public class ReviewService {
         int limitNum=30;
         List<Review> reviewList = reviewRepository.findPopularReviewList(limitNum);
 
-        return returnReviewList(memberId, reviewList);
+        return returnReviewListDto(memberId, reviewList);
     }
 
     public List<ReviewListResponseDto> getMyType_recommandReviewList(Long memberId) {
@@ -126,21 +145,21 @@ public class ReviewService {
 
         List<Review> reviewList = reviewRepository.findMyType_RecommandReviewList(member, limitNum);
 
-        return returnReviewList(memberId, reviewList);
+        return returnReviewListDto(memberId, reviewList);
     }
 
     public List<ReviewListResponseDto> getSearchReviewList(Long memberId, ReviewSearchCondition condition) {
 
         List<Review> reviewList = reviewRepository.search(condition);
 
-        return returnReviewList(memberId, reviewList);
+        return returnReviewListDto(memberId, reviewList);
     }
 
     public List<ReviewListResponseDto> getHairShopReviewList(Long memberId, String shopName) {
 
         List<Review> reviewList = reviewRepository.findByHairShopName(shopName);
 
-        return returnReviewList(memberId, reviewList);
+        return returnReviewListDto(memberId, reviewList);
     }
 
     public List<MainReviewResponseDto> getMainMyTypeReviewList(Long memberId) {
@@ -159,17 +178,11 @@ public class ReviewService {
     }
 
 
-    private List<ReviewListResponseDto> returnReviewList(Long memberId, List<Review> reviewList) {
-
-        Member member = getMember(memberId);
-
-        if (CollectionUtils.isEmpty(reviewList)) {
-            return List.of();
-        }
+    private List<String> getOneImageForReview(List<Review> reviewList) {
 
         return reviewList
                 .stream()
-                .map(review -> createReviewListInfo_withReviewImage(member, review))
+                .map(review -> getOneImagePathForReview(review))
                 .collect(Collectors.toList());
     }
 
@@ -181,12 +194,6 @@ public class ReviewService {
         return false;
     }
 
-    private ReviewListResponseDto createReviewListInfo_withReviewImage(Member member, Review review) {
-
-        String imagePath = getOneImagePathForReview(review);
-
-        return createReviewListResponse(member, review, imagePath);
-    }
 
     private String getOneImagePathForReview(Review review) {
 
