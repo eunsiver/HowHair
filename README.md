@@ -1,6 +1,8 @@
 # 🔮HowHair - Backend🔮
 Hair_Review_Website - Springboot, AWS(ec2,s3), RestAPI, SpringDataJPA, QueryDsl
 
+[Figma UI](https://www.figma.com/file/tgDHe7Pm4XidM0bZFo7Rh3/Untitled?node-id=1%3A6&t=lbE92Uo2l7qsbrpW-1)
+
 ## 🔉 프로젝트 소개
 > 헤어샵 리뷰를 작성 및 조회하고, 본인에 맞는 헤어스타일을 추천 받아 헤어 시술 고민을 도와주는 서비스
 
