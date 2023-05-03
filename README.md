@@ -32,7 +32,7 @@ Hair_Review_Website - Springboot, AWS(ec2,s3), RestAPI, SpringDataJPA, QueryDsl
 </br>
 
 ## 🔳 How Hair API
-![image](https://user-images.githubusercontent.com/76419984/230621789-78445479-2fb4-4c99-b18b-b4937b8a9c87.png)
+[](https://www.notion.so/parkhyeonji/HowHair-Api-Sheet-f3680a6cb00a4f70a651b4173b69ef68)
 
 
 ## 🔀 Git-Flow
