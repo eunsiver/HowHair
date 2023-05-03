@@ -33,6 +33,7 @@ Hair_Review_Website - Springboot, AWS(ec2,s3), RestAPI, SpringDataJPA, QueryDsl
 
 ## 🔳 How Hair API
 [API Sheet with Notion](https://www.notion.so/parkhyeonji/HowHair-Api-Sheet-f3680a6cb00a4f70a651b4173b69ef68)
+![image](https://user-images.githubusercontent.com/76419984/236071499-c9aa078f-126a-4cef-9150-dc836fd3a283.png)
 
 
 ## 🔀 Git-Flow
